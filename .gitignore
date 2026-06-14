@@ -4,6 +4,8 @@
 .env
 .env.*
 !.env.example
+token.json
+credentials.json
 
 # ====================
 # Python
@@ -35,6 +37,7 @@ frontend/.vite/
 frontend/src-tauri/target/
 frontend/src-tauri/WixTools/
 frontend/src-tauri/gen/
+frontend/src-tauri/bin/*.exe
 
 # ====================
 # Database (local data)
@@ -76,3 +79,8 @@ temp/
 htmlcov/
 .pytest_cache/
 .mypy_cache/
+
+# ====================
+# Scratch / Drafts
+# ====================
+scratch/
