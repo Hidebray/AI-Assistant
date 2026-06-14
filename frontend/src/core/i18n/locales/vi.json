@@ -1,0 +1,223 @@
+{
+  "settings": {
+    "title": "Cài đặt",
+    "tabs": {
+      "general": "Chung",
+      "llm": "Nhà cung cấp AI",
+      "plugins": "Tiện ích mở rộng"
+    },
+    "general": {
+      "title": "Cài đặt chung",
+      "theme": {
+        "label": "Giao diện",
+        "description": "Lựa chọn chế độ hiển thị Sáng hoặc Tối.",
+        "dark": "Chế độ tối",
+        "light": "Chế độ sáng",
+        "system": "Tự động theo hệ thống"
+      },
+      "language": {
+        "label": "Ngôn ngữ",
+        "description": "Ngôn ngữ hiển thị của ứng dụng."
+      },
+      "autoStart": {
+        "label": "Khởi động cùng Windows",
+        "description": "Tự động mở trợ lý ở chế độ ngầm khi bật máy."
+      },
+      "dangerZone": {
+        "title": "Khu vực nguy hiểm",
+        "description": "Những hành động không thể hoàn tác, ảnh hưởng đến dữ liệu.",
+        "factoryReset": "Xóa tài khoản và dữ liệu",
+        "modalTitle": "Xóa toàn bộ dữ liệu",
+        "modalWarning1": "Hành động này sẽ xóa vĩnh viễn tài khoản của bạn, toàn bộ lịch sử trò chuyện, công việc, sự kiện và cài đặt.",
+        "modalWarning2": "Ứng dụng sẽ xóa trắng tài khoản. Hành động này KHÔNG THỂ hoàn tác.",
+        "modalConfirmPrompt": "Vui lòng gõ DELETE để xác nhận.",
+        "failed": "Xóa thất bại: "
+      },
+      "account": {
+        "title": "Tài khoản & Bảo mật",
+        "description": "Thay đổi mật khẩu đăng nhập.",
+        "oldPassword": "Mật khẩu hiện tại",
+        "newPassword": "Mật khẩu mới (tối thiểu 6 ký tự)",
+        "updatePassword": "Cập nhật mật khẩu",
+        "success": "Đổi mật khẩu thành công!",
+        "error": "Sai mật khẩu hoặc có lỗi xảy ra.",
+        "confirmPassword": "Xác nhận mật khẩu mới",
+        "passwordsNotMatch": "Mật khẩu xác nhận không khớp",
+        "passwordTooShort": "Mật khẩu phải dài ít nhất 6 ký tự",
+        "incorrectOldPassword": "Mật khẩu cũ không chính xác"
+      }
+    },
+    "llm": {
+      "title": "Nhà cung cấp AI",
+      "openaiKey": "Khóa API OpenAI",
+      "openaiKeyDesc": "Nhập khóa API OpenAI để sử dụng các mô hình GPT.",
+      "geminiKey": "Khóa API Google Gemini",
+      "geminiKeyDesc": "Nhập khóa API Gemini để sử dụng các mô hình Google.",
+      "ollamaTitle": "Local AI (Ollama)",
+      "ollamaUrl": "Địa chỉ Ollama",
+      "ollamaUrlDesc": "Địa chỉ cài đặt Ollama cục bộ (mặc định: http://localhost:11434).",
+      "ollamaAutoConnDesc": "Hệ thống được lập trình để tự động kết nối với Ollama nội bộ (Local). Vui lòng đảm bảo ứng dụng Ollama đang được bật trên máy tính của bạn.",
+      "collapse": "Thu gọn",
+      "advanced": "Nâng cao",
+      "systemPrompt": "Lệnh hệ thống",
+      "systemPromptDesc": "Tùy chỉnh lệnh hệ thống để định hình phong cách phản hồi của trợ lý.",
+      "placeholderKey": "sk-...",
+      "installedModels": "Mô hình đã cài đặt",
+      "placeholderSystemPrompt": "Bạn là một trợ lý AI hữu ích..."
+    },
+    "plugins": {
+      "title": "Tiện ích mở rộng",
+      "description": "Mở rộng khả năng bằng cách bật các tiện ích.",
+      "noPlugins": "Không tìm thấy tiện ích nào.",
+      "enabled": "Đã bật plugin {id}",
+      "disabled": "Đã tắt plugin {id}",
+      "config": "Cấu hình",
+      "items": {
+        "web_search_plugin": {
+          "name": "Tìm kiếm Web",
+          "description": "Tìm kiếm thông tin trên Internet thông qua DuckDuckGo."
+        },
+        "memory_plugin": {
+          "name": "Bộ nhớ AI",
+          "description": "Cung cấp công cụ ghi nhớ và xử lý trí nhớ về người dùng."
+        },
+        "calendar_plugin": {
+          "name": "Lịch",
+          "description": "Xem và quản lý sự kiện trên lịch."
+        },
+        "email_plugin": {
+          "name": "Email",
+          "description": "Đọc và gửi email."
+        },
+        "flaky_tool_plugin": {
+          "name": "Công cụ Flaky (Mô phỏng lỗi)",
+          "description": "Công cụ thử nghiệm tỷ lệ lỗi để kiểm tra khả năng tự sửa lỗi của AI."
+        }
+      }
+    },
+    "sync": {
+      "saved": "Đã lưu cấu hình"
+    }
+  },
+  "sidebar": {
+    "chats": "Trò chuyện",
+    "newChat": "Cuộc trò chuyện mới",
+    "history": "Lịch sử",
+    "notifications": "Thông báo",
+    "settings": "Cài đặt",
+    "logout": "Đăng xuất"
+  },
+  "chat": {
+    "title": "Trò chuyện",
+    "greeting": "Xin chào! Mình có thể giúp gì cho bạn hôm nay?",
+    "inputPlaceholder": "Nhập tin nhắn...",
+    "loadingHistory": "Đang tải lịch sử trò chuyện...",
+    "activity": "Hoạt động (Activity)",
+    "placeholder": "Hỏi AAA bất cứ điều gì...",
+    "disclaimer": "AAA có thể mắc sai lầm. Hãy kiểm tra lại các thông tin quan trọng.",
+    "stop": "Dừng",
+    "voiceInput": "Nhập bằng giọng nói",
+    "voiceInputNotSupported": "Trình duyệt không hỗ trợ nhập bằng giọng nói",
+    "empty": "Chưa có tin nhắn nào."
+  },
+  "history": {
+    "search": "Tìm kiếm...",
+    "messages": "tin nhắn",
+    "noConversations": "Không tìm thấy đoạn hội thoại nào."
+  },
+  "notifications": {
+    "markAllRead": "Đánh dấu tất cả đã đọc",
+    "all": "Tất cả",
+    "unread": "Chưa đọc",
+    "important": "Quan trọng",
+    "empty": "Không có thông báo nào ở đây."
+  },
+  "common": {
+    "cancel": "Hủy",
+    "confirm": "Xác nhận"
+  },
+  "auth": {
+    "login": {
+      "title": "Chào mừng quay trở lại",
+      "subtitle": "Đăng nhập vào Trợ lý AI của bạn",
+      "username": "Tên đăng nhập",
+      "username_placeholder": "Nhập tên đăng nhập",
+      "password": "Mật khẩu",
+      "password_placeholder": "Nhập mật khẩu",
+      "submit": "Đăng nhập",
+      "noAccount": "Chưa có tài khoản?",
+      "signup": "Đăng ký ngay",
+      "loading": "Đang đăng nhập..."
+    },
+    "register": {
+      "title": "Tạo tài khoản",
+      "subtitle": "Tham gia Trợ lý AI tự động",
+      "username": "Tên đăng nhập",
+      "username_placeholder": "Tạo tên đăng nhập",
+      "password": "Mật khẩu",
+      "password_placeholder": "Tạo mật khẩu",
+      "confirmPassword": "Xác nhận mật khẩu",
+      "confirmPassword_placeholder": "Nhập lại mật khẩu",
+      "submit": "Đăng ký",
+      "hasAccount": "Đã có tài khoản?",
+      "signin": "Đăng nhập",
+      "loading": "Đang tạo tài khoản..."
+    }
+  },
+  "wizard": {
+    "statusInit": "Đang khởi tạo...",
+    "errorConnBackend": "Không thể kết nối đến backend",
+    "errorConnGeneric": "Lỗi kết nối. Vui lòng đảm bảo backend đang chạy.",
+    "statusConnOllama": "Đang kết nối để tải Ollama...",
+    "statusDownloading": "Đang tải trình cài đặt...",
+    "statusInstalling": "Đang cài đặt (vui lòng chờ trong giây lát)...",
+    "errorInstall": "Có lỗi xảy ra trong quá trình cài đặt",
+    "statusPrepModel": "Đang chuẩn bị tải model...",
+    "statusPulling": "Đang tải model:",
+    "statusPullComplete": "Tải model thành công!",
+    "errorPull": "Có lỗi xảy ra khi tải model",
+    "headerTitle": "Thiết lập Trí tuệ Nhân tạo Nội bộ",
+    "headerDesc": "Chạy AI hoàn toàn miễn phí & bảo mật trên máy bạn",
+    "btnSkipTitle": "Bỏ qua và dùng khóa API",
+    "step2Title": "Hệ thống cần Ollama để hoạt động",
+    "step2Desc": "Ollama là một nền tảng mã nguồn mở giúp chạy các mô hình ngôn ngữ lớn cục bộ trên máy tính của bạn.",
+    "btnInstall": "Cài đặt Ollama tự động",
+    "step3Title": "Ollama đã sẵn sàng!",
+    "step3Desc1": "Bây giờ chúng ta cần tải mô hình ngôn ngữ về máy. Khuyến nghị: ",
+    "step3Desc2": "Quá trình tải phụ thuộc vào tốc độ mạng của bạn.",
+    "btnPull": "Tải Model ",
+    "step4Title": "Mọi thứ đã hoàn tất!",
+    "step4Desc": "Hệ thống AI đã được cài đặt và cấu hình thành công trên máy tính của bạn.",
+    "btnStart": "Bắt đầu trải nghiệm",
+    "btnSkipText": "Bỏ qua bước này, tôi sẽ dùng khóa API từ OpenAI hoặc Gemini"
+  },
+  "promptLibrary": {
+    "title": "Thư viện Mẫu lệnh",
+    "subtitle": "Gợi ý sử dụng các tính năng thông minh của AAA.",
+    "schedule": {
+      "title": "Đặt lịch hẹn",
+      "desc": "Yêu cầu AI nhắc nhở hoặc đặt lịch.",
+      "prompt": "Hãy đặt lịch cho tôi [làm việc gì đó] vào lúc [thời gian]."
+    },
+    "memory": {
+      "title": "Ghi nhớ thông tin",
+      "desc": "Lưu lại sở thích hoặc thông tin cá nhân.",
+      "prompt": "Hãy ghi nhớ thông tin này về tôi: [Thông tin cần nhớ]."
+    },
+    "task": {
+      "title": "Thêm công việc",
+      "desc": "Thêm một việc vào danh sách cần làm.",
+      "prompt": "Thêm vào danh sách công việc của tôi: [Tên công việc]."
+    },
+    "query": {
+      "title": "Kiểm tra lịch trình",
+      "desc": "Hỏi xem hôm nay có lịch gì không.",
+      "prompt": "Hôm nay tôi có những lịch trình hoặc công việc gì cần làm không?"
+    },
+    "email_check": {
+      "title": "Kiểm tra Email",
+      "desc": "Yêu cầu AI quét hộp thư và báo cáo email quan trọng.",
+      "prompt": "Hãy kiểm tra hộp thư của tôi. Có email nào mới hoặc quan trọng cần tôi xử lý ngay hôm nay không? Nếu có, hãy tóm tắt nội dung chính."
+    }
+  }
+}

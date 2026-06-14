@@ -1,0 +1,223 @@
+{
+  "settings": {
+    "title": "Settings",
+    "tabs": {
+      "general": "General",
+      "llm": "LLM Providers",
+      "plugins": "Plugins"
+    },
+    "general": {
+      "title": "General Settings",
+      "theme": {
+        "label": "Theme",
+        "description": "Choose your preferred appearance.",
+        "dark": "Dark Mode",
+        "light": "Light Mode",
+        "system": "System Default"
+      },
+      "language": {
+        "label": "Language",
+        "description": "Select the application display language."
+      },
+      "autoStart": {
+        "label": "Start with Windows",
+        "description": "Automatically launch the assistant silently on startup."
+      },
+      "dangerZone": {
+        "title": "Danger Zone",
+        "description": "Irreversible actions that will affect your account and data.",
+        "factoryReset": "Delete Account & Data",
+        "modalTitle": "Delete all data",
+        "modalWarning1": "This action will permanently delete your account, all chat history, tasks, events, and settings.",
+        "modalWarning2": "The app will delete your account completely. This CANNOT be undone.",
+        "modalConfirmPrompt": "Please type DELETE to confirm.",
+        "failed": "Deletion failed: "
+      },
+      "account": {
+        "title": "Account & Security",
+        "description": "Change your login password.",
+        "oldPassword": "Current Password",
+        "newPassword": "New Password (min 6 characters)",
+        "updatePassword": "Update Password",
+        "success": "Password changed successfully!",
+        "error": "Incorrect password or an error occurred.",
+        "confirmPassword": "Confirm New Password",
+        "passwordsNotMatch": "Passwords do not match",
+        "passwordTooShort": "Password must be at least 6 characters",
+        "incorrectOldPassword": "Incorrect old password"
+      }
+    },
+    "llm": {
+      "title": "LLM Providers",
+      "openaiKey": "OpenAI API Key",
+      "openaiKeyDesc": "Enter your OpenAI API key to use GPT models.",
+      "geminiKey": "Google Gemini API Key",
+      "geminiKeyDesc": "Enter your Gemini API key to use Google models.",
+      "ollamaTitle": "Local AI (Ollama)",
+      "ollamaUrl": "Ollama Base URL",
+      "ollamaUrlDesc": "URL for your local Ollama instance (default: http://localhost:11434).",
+      "ollamaAutoConnDesc": "The system is programmed to automatically connect to local Ollama. Please ensure Ollama is running on your computer.",
+      "collapse": "Collapse",
+      "advanced": "Advanced",
+      "systemPrompt": "System Prompt",
+      "systemPromptDesc": "Provide a custom system prompt to define the assistant behavior.",
+      "placeholderKey": "sk-...",
+      "installedModels": "Installed Models",
+      "placeholderSystemPrompt": "You are a helpful AI assistant..."
+    },
+    "plugins": {
+      "title": "Plugins",
+      "description": "Enhance capabilities by enabling plugins.",
+      "noPlugins": "No plugins found on the server.",
+      "enabled": "Enabled plugin {id}",
+      "disabled": "Disabled plugin {id}",
+      "config": "Config",
+      "items": {
+        "web_search_plugin": {
+          "name": "Web Search",
+          "description": "Searches the internet for information via DuckDuckGo."
+        },
+        "memory_plugin": {
+          "name": "Memory",
+          "description": "Provides tools to manipulate the user explicit memory."
+        },
+        "calendar_plugin": {
+          "name": "Calendar",
+          "description": "View and manage calendar events."
+        },
+        "email_plugin": {
+          "name": "Email",
+          "description": "Read and send emails."
+        },
+        "flaky_tool_plugin": {
+          "name": "Flaky Tool (Error Simulator)",
+          "description": "A test tool with simulated failure rates to test AI auto-correction capabilities."
+        }
+      }
+    },
+    "sync": {
+      "saved": "Settings saved"
+    }
+  },
+  "sidebar": {
+    "chats": "Chats",
+    "newChat": "New Chat",
+    "history": "History",
+    "notifications": "Notifications",
+    "settings": "Settings",
+    "logout": "Logout",
+    "empty": "No messages yet."
+  },
+  "history": {
+    "search": "Search...",
+    "messages": "messages",
+    "noConversations": "No conversations found."
+  },
+  "notifications": {
+    "markAllRead": "Mark all as read",
+    "all": "All",
+    "unread": "Unread",
+    "important": "Important",
+    "empty": "No notifications here."
+  },
+  "chat": {
+    "title": "Chat",
+    "greeting": "Hello! How can I help you today?",
+    "inputPlaceholder": "Type a message...",
+    "loadingHistory": "Loading chat history...",
+    "activity": "Activity",
+    "placeholder": "Ask AAA anything...",
+    "disclaimer": "AAA can make mistakes. Verify important information.",
+    "stop": "Stop",
+    "voiceInput": "Voice Input",
+    "voiceInputNotSupported": "Voice Input Not Supported"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Log in to your AI Assistant",
+      "username": "Username",
+      "username_placeholder": "Enter your username",
+      "password": "Password",
+      "password_placeholder": "Enter your password",
+      "submit": "Sign In",
+      "noAccount": "Don't have an account?",
+      "signup": "Sign up now",
+      "loading": "Signing in..."
+    },
+    "register": {
+      "title": "Create Account",
+      "subtitle": "Join Autonomous AI Assistant",
+      "username": "Username",
+      "username_placeholder": "Choose a username",
+      "password": "Password",
+      "password_placeholder": "Create a password",
+      "confirmPassword": "Confirm Password",
+      "confirmPassword_placeholder": "Confirm your password",
+      "submit": "Sign Up",
+      "hasAccount": "Already have an account?",
+      "signin": "Sign in",
+      "loading": "Creating account..."
+    }
+  },
+  "wizard": {
+    "statusInit": "Initializing...",
+    "errorConnBackend": "Cannot connect to backend",
+    "errorConnGeneric": "Connection error. Please ensure backend is running.",
+    "statusConnOllama": "Connecting to download Ollama...",
+    "statusDownloading": "Downloading installer...",
+    "statusInstalling": "Installing (please wait)...",
+    "errorInstall": "Error during installation",
+    "statusPrepModel": "Preparing to pull model...",
+    "statusPulling": "Pulling model:",
+    "statusPullComplete": "Model pulled successfully!",
+    "errorPull": "Error pulling model",
+    "headerTitle": "Local AI Setup",
+    "headerDesc": "Run AI completely free & securely on your machine",
+    "btnSkipTitle": "Skip (Use API Key)",
+    "step2Title": "System requires Ollama to work",
+    "step2Desc": "Ollama is an open-source platform that helps you run large language models locally.",
+    "btnInstall": "Install Ollama automatically",
+    "step3Title": "Ollama is ready!",
+    "step3Desc1": "Now we need to download an AI model. Recommended: ",
+    "step3Desc2": "Download time depends on your internet speed.",
+    "btnPull": "Pull Model ",
+    "step4Title": "Everything is set up!",
+    "step4Desc": "AI system has been successfully installed and configured.",
+    "btnStart": "Get started",
+    "btnSkipText": "Skip this step, I will use API Key (OpenAI/Gemini)"
+  },
+  "promptLibrary": {
+    "title": "Prompt Library",
+    "subtitle": "Suggestions to use AAA smart features.",
+    "schedule": {
+      "title": "Schedule Event",
+      "desc": "Ask AI to set a reminder or schedule.",
+      "prompt": "Please schedule a reminder for me to [do something] at [time]."
+    },
+    "memory": {
+      "title": "Remember Info",
+      "desc": "Save personal preferences or facts.",
+      "prompt": "Please remember this information about me: [Information to remember]."
+    },
+    "task": {
+      "title": "Add Task",
+      "desc": "Add an item to your to-do list.",
+      "prompt": "Add to my to-do list: [Task name]."
+    },
+    "query": {
+      "title": "Check Schedule",
+      "desc": "Ask if you have any schedule today.",
+      "prompt": "Do I have any events or tasks scheduled for today?"
+    },
+    "email_check": {
+      "title": "Check Email",
+      "desc": "Ask AI to scan inbox and report important emails.",
+      "prompt": "Please check my inbox. Are there any new or important emails I need to handle today? If so, summarize the main points."
+    }
+  }
+}
