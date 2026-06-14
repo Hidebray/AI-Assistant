@@ -1,0 +1,78 @@
+# ====================
+# Environment & Secrets
+# ====================
+.env
+.env.*
+!.env.example
+
+# ====================
+# Python
+# ====================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+venv/
+.venv/
+.Python
+
+# ====================
+# Node.js / Frontend
+# ====================
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+*.tsbuildinfo
+
+# ====================
+# Tauri
+# ====================
+frontend/src-tauri/target/
+frontend/src-tauri/WixTools/
+frontend/src-tauri/gen/
+
+# ====================
+# Database (local data)
+# ====================
+*.db
+*.db-shm
+*.db-wal
+data/
+
+# ====================
+# IDE & Editor
+# ====================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ====================
+# OS Files
+# ====================
+Desktop.ini
+ehthumbs.db
+
+# ====================
+# Logs & Temp
+# ====================
+*.log
+logs/
+tmp/
+temp/
+
+# ====================
+# Test & Coverage
+# ====================
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
