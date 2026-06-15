@@ -12,31 +12,33 @@ interface Notification {
   isImportant?: boolean;
 }
 
-// Mock data for now, since we haven't built a persistent notification DB yet
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    title: 'Task sắp đến hạn',
-    message: 'Công việc "Gửi báo cáo tài chính" sẽ đến hạn trong 30 phút nữa.',
-    type: 'warning',
-    isRead: false,
-    createdAt: new Date().toISOString(),
-    isImportant: true
-  },
-  {
-    id: '2',
-    title: 'Đồng bộ Email thành công',
-    message: 'Đã tìm thấy 2 lịch hẹn mới từ Gmail và tự động thêm vào Calendar.',
-    type: 'success',
-    isRead: true,
-    createdAt: new Date(Date.now() - 86400000).toISOString()
-  }
-];
+import { useNotificationStore } from '../../core/store/useNotificationStore';
+import { useAuthStore } from '../../core/store/useAuthStore';
 
 export const NotificationHub: React.FC = () => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'all' | 'unread' | 'important'>('all');
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+  
+  const { notifications, setNotifications, markAllAsRead, deleteNotification } = useNotificationStore();
+  const { token } = useAuthStore();
+
+  React.useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        
+        const res = await fetch('http://localhost:8000/api/notifications', { headers });
+        if (res.ok) {
+          const data = await res.json();
+          setNotifications(data);
+        }
+      } catch (e) {
+        console.error('Failed to fetch notifications', e);
+      }
+    };
+    fetchNotifications();
+  }, [token, setNotifications]);
 
   const filteredNotifs = notifications.filter(n => {
     if (activeTab === 'unread') return !n.isRead;
@@ -44,21 +46,35 @@ export const NotificationHub: React.FC = () => {
     return true;
   });
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+  const handleMarkAllAsRead = async () => {
+    try {
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      await fetch('http://localhost:8000/api/notifications/read-all', { method: 'PUT', headers });
+      markAllAsRead();
+    } catch (e) {
+      console.error('Failed to mark all as read', e);
+    }
   };
 
-  const deleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      await fetch(`http://localhost:8000/api/notifications/${id}`, { method: 'DELETE', headers });
+      deleteNotification(id);
+    } catch (e) {
+      console.error('Failed to delete notification', e);
+    }
   };
 
-  const getIcon = (type: string, isImportant?: boolean) => {
-    if (isImportant) return <CalendarClock className="text-red-500" size={24} />;
+  const getIconConfig = (type: string, isImportant?: boolean) => {
+    if (isImportant) return { icon: <CalendarClock className="text-red-600 dark:text-red-400" size={24} />, bg: "bg-red-50 dark:bg-red-500/10" };
     switch (type) {
-      case 'success': return <CheckCircle2 className="text-emerald-500" size={24} />;
-      case 'warning': return <AlertTriangle className="text-amber-500" size={24} />;
-      case 'error': return <AlertTriangle className="text-red-500" size={24} />;
-      default: return <Bell className="text-blue-500" size={24} />;
+      case 'success': return { icon: <CheckCircle2 className="text-emerald-600 dark:text-emerald-400" size={24} />, bg: "bg-emerald-50 dark:bg-emerald-500/10" };
+      case 'warning': return { icon: <AlertTriangle className="text-amber-600 dark:text-amber-400" size={24} />, bg: "bg-amber-50 dark:bg-amber-500/10" };
+      case 'error': return { icon: <AlertTriangle className="text-red-600 dark:text-red-400" size={24} />, bg: "bg-red-50 dark:bg-red-500/10" };
+      default: return { icon: <Bell className="text-blue-600 dark:text-blue-400" size={24} />, bg: "bg-blue-50 dark:bg-blue-500/10" };
     }
   };
 
@@ -70,13 +86,13 @@ export const NotificationHub: React.FC = () => {
             <h1 className="text-3xl font-bold text-slate-800 dark:text-white">
               {t('sidebar.notifications') || 'Thông báo'}
             </h1>
-            <span className="bg-red-500 text-white text-sm font-bold px-2.5 py-0.5 rounded-full">
+            <span className="bg-red-500 text-white text-sm font-bold px-2.5 py-0.5 rounded-full shadow-sm">
               {notifications.filter(n => !n.isRead).length}
             </span>
           </div>
           
           <button 
-            onClick={markAllAsRead}
+            onClick={handleMarkAllAsRead}
             className="flex items-center gap-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-500/10 px-4 py-2 rounded-lg transition-colors"
           >
             <Check size={16} />
@@ -88,19 +104,19 @@ export const NotificationHub: React.FC = () => {
         <div className="flex items-center gap-2 mb-6 border-b border-slate-200 dark:border-white/10 pb-4">
           <button 
             onClick={() => setActiveTab('all')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeTab === 'all' ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/10'}`}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${activeTab === 'all' ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900 shadow-sm' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/10'}`}
           >
             {t('notifications.all')}
           </button>
           <button 
             onClick={() => setActiveTab('unread')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeTab === 'unread' ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/10'}`}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${activeTab === 'unread' ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900 shadow-sm' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/10'}`}
           >
             {t('notifications.unread')}
           </button>
           <button 
             onClick={() => setActiveTab('important')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeTab === 'important' ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/10'}`}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${activeTab === 'important' ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900 shadow-sm' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/10'}`}
           >
             {t('notifications.important')}
           </button>
@@ -108,17 +124,19 @@ export const NotificationHub: React.FC = () => {
 
         {/* List */}
         <div className="space-y-3">
-          {filteredNotifs.map(notif => {
+          {filteredNotifs.map((notif, index) => {
             const date = new Date(notif.createdAt);
             const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const iconConfig = getIconConfig(notif.type, notif.isImportant);
             
             return (
               <div 
                 key={notif.id} 
-                className={`group flex items-start gap-4 p-4 rounded-2xl border transition-all duration-300 ${notif.isRead ? 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/5 opacity-70' : 'bg-white dark:bg-white/10 border-primary-200 dark:border-primary-500/30 shadow-sm'}`}
+                style={{ animationDelay: `${index * 50}ms` }}
+                className={`group flex items-start gap-4 p-4 rounded-2xl border transition-all duration-300 opacity-0 animate-fade-in-up ${notif.isRead ? 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/5 opacity-70' : 'bg-white dark:bg-white/10 border-primary-200 dark:border-primary-500/30 shadow-sm hover:shadow-[0_8px_30px_rgba(99,102,241,0.15)] dark:hover:shadow-[0_8px_30px_rgba(99,102,241,0.2)] dark:hover:border-primary-400'}`}
               >
-                <div className="mt-1 shrink-0 p-2 bg-slate-50 dark:bg-black/20 rounded-xl">
-                  {getIcon(notif.type, notif.isImportant)}
+                <div className={`mt-1 shrink-0 p-3 rounded-xl shadow-sm ${iconConfig.bg} group-hover:scale-105 transition-transform`}>
+                  {iconConfig.icon}
                 </div>
                 
                 <div className="flex-1 min-w-0">
@@ -129,7 +147,7 @@ export const NotificationHub: React.FC = () => {
                           {notif.title}
                         </h4>
                         {!notif.isRead && (
-                          <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
+                          <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0 shadow-[0_0_8px_rgba(59,130,246,0.6)]"></span>
                         )}
                         {notif.isImportant && (
                           <span className="bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
@@ -137,30 +155,34 @@ export const NotificationHub: React.FC = () => {
                           </span>
                         )}
                       </div>
-                      <p className="text-slate-500 dark:text-slate-400 text-sm">
+                      <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
                         {notif.message}
                       </p>
                     </div>
-                    <div className="text-xs font-medium text-slate-400 whitespace-nowrap shrink-0">
+                    <div className="text-xs font-medium text-slate-400 whitespace-nowrap shrink-0 mt-1">
                       {timeString}
                     </div>
                   </div>
                 </div>
 
                 <button 
-                  onClick={() => deleteNotification(notif.id)}
+                  onClick={() => handleDelete(notif.id)}
                   className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all"
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={18} />
                 </button>
               </div>
             );
           })}
           
+          {/* Empty State */}
           {filteredNotifs.length === 0 && (
-            <div className="text-center py-20 text-slate-500">
-              <Bell size={48} className="mx-auto mb-4 opacity-20" />
-              <p>{t('notifications.empty')}</p>
+            <div className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 mt-24 opacity-0 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+              <div className="w-24 h-24 mb-6 rounded-full bg-slate-100 dark:bg-slate-800/50 flex items-center justify-center">
+                <Bell size={40} className="opacity-50" />
+              </div>
+              <p className="text-lg font-medium">{t('notifications.empty') || 'Không có thông báo nào ở đây.'}</p>
+              <p className="text-sm mt-2 opacity-70">Bạn đã cập nhật tất cả thông tin mới nhất.</p>
             </div>
           )}
         </div>

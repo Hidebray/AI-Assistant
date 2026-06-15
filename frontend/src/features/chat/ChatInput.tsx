@@ -65,8 +65,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({ sendMessage, stopGeneratin
 
   return (
     <div className="w-full px-6 py-4">
-      <div className="max-w-4xl mx-auto w-full relative">
-        <div className="bg-white/90 dark:bg-slate-900/40 backdrop-blur-2xl border border-slate-200 dark:border-white/20 shadow-sm dark:shadow-glass-widget rounded-2xl flex flex-col p-2 transition-all duration-300 focus-within:border-primary-500/50 focus-within:shadow-md dark:focus-within:shadow-ai-glow">
+      <div className="max-w-4xl mx-auto w-full relative group">
+        <div className="bg-white/95 dark:bg-slate-900/70 backdrop-blur-3xl border border-slate-200/80 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 hover:shadow-xl dark:hover:shadow-glass-widget-hover shadow-lg dark:shadow-glass-widget rounded-3xl flex flex-col p-2.5 transition-all duration-300 focus-within:border-primary-500/50 focus-within:shadow-[0_8px_30px_rgba(99,102,241,0.15)] dark:focus-within:shadow-ai-glow focus-within:bg-white dark:focus-within:bg-slate-900/90 group-hover:-translate-y-0.5">
           <textarea
             ref={textareaRef}
             value={input}
@@ -124,9 +124,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({ sendMessage, stopGeneratin
                 {input.trim() && (
                   <button 
                     onClick={handleSubmit}
-                    className="p-2 bg-primary-500 hover:bg-primary-glow text-white rounded-xl shadow-lg transition-all active:scale-95"
+                    className="group p-2 bg-primary-500 hover:bg-primary-glow text-white rounded-xl shadow-lg transition-all active:scale-95 hover:-translate-y-0.5"
                   >
-                    <ArrowUp size={20} />
+                    <ArrowUp size={20} className="transition-transform group-hover:-translate-y-0.5" />
                   </button>
                 )}
               </div>

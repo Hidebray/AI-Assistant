@@ -5,11 +5,45 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply bg-slate-50 dark:bg-transparent text-slate-900 dark:text-slate-50 font-sans antialiased overflow-hidden;
-    /* Giả lập Desktop Wallpaper phía sau để test Glassmorphism nếu chạy ở trình duyệt */
-    background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop');
-    background-size: cover;
-    background-position: center;
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
   }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+  }
+
+  body {
+    @apply bg-slate-50 dark:bg-[#09090b] text-slate-900 dark:text-slate-50 font-sans antialiased overflow-hidden selection:bg-primary-500/30 transition-colors duration-300;
+    /* Premium dark gradient mesh as background in dark mode, or subtle mesh in light mode */
+    background-image: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                      radial-gradient(at 50% 0%, hsla(225,39%,30%,0.2) 0, transparent 50%), 
+                      radial-gradient(at 100% 0%, hsla(339,49%,30%,0.2) 0, transparent 50%);
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-500 to-purple-500;
+  }
+  .glass-panel {
+    @apply bg-white/70 dark:bg-slate-900/40 backdrop-blur-2xl border border-white/20 shadow-xl;
+  }
+}
+
+/* Custom scrollbar for webkit */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 dark:bg-white/10 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400 dark:bg-white/20;
 }

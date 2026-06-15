@@ -33,7 +33,7 @@ export const useChatWebSocket = () => {
       }));
     };
 
-    ws.current.onmessage = (event) => {
+    ws.current.onmessage = async (event) => {
       try {
         const data = JSON.parse(event.data);
         const { appendStreamChunk, commitStream } = useChatStore.getState();
@@ -42,12 +42,34 @@ export const useChatWebSocket = () => {
           appendStreamChunk(data.content);
         } else if (data.type === "status") {
           console.log("Agent Status:", data.content);
+          window.dispatchEvent(new CustomEvent('event-bus-log', {
+            detail: {
+              type: 'system',
+              message: data.content
+            }
+          }));
         } else if (data.type === "alert") {
           console.log("System Alert:", data.message);
+          
+          const urgencyUpper = data.urgency.toUpperCase();
+          const title = urgencyUpper === 'CRITICAL' ? 'Cảnh báo khẩn cấp' : 'Thông báo hệ thống';
+          
           useAlertStore.getState().triggerAlert({
             urgency: data.urgency,
-            title: data.urgency.toUpperCase() === 'CRITICAL' ? 'Cảnh báo khẩn cấp' : 'Thông báo hệ thống',
+            title: title,
             message: data.message
+          });
+
+          // Add to NotificationStore for persistent UI
+          const { useNotificationStore } = await import('../../core/store/useNotificationStore');
+          useNotificationStore.getState().addNotification({
+            id: crypto.randomUUID(), // Will be overwritten by DB on refresh, but good for local state
+            title: title,
+            message: data.message,
+            type: urgencyUpper === 'CRITICAL' ? 'error' : (urgencyUpper === 'HIGH' ? 'warning' : 'info'),
+            isRead: false,
+            isImportant: urgencyUpper === 'CRITICAL' || urgencyUpper === 'HIGH',
+            createdAt: new Date().toISOString()
           });
           // Try to use Tauri notification if available
           try {
@@ -71,9 +93,6 @@ export const useChatWebSocket = () => {
           commitStream();
         } else if (data.type === "done") {
           commitStream();
-        } else if (data.type === "network_state") {
-          console.log("Network state:", data.is_online ? "ONLINE" : "OFFLINE");
-          useSettingsStore.getState().setOnline(data.is_online);
         } else if (data.type === "AUTHENTICATED") {
           console.log("WebSocket authenticated!");
         }
@@ -92,52 +111,7 @@ export const useChatWebSocket = () => {
     connectRef.current = connect;
     connect();
 
-    let pollInterval: number;
-
-    const checkTrueInternet = async () => {
-      try {
-        if (!navigator.onLine) return false;
-        
-        // Use a lightweight, robust fetch ping to Google's favicon to verify actual internet
-        // We use mode: 'no-cors' to avoid CORS issues and cache: 'no-store' to force network request
-        await fetch('https://www.google.com/favicon.ico', { mode: 'no-cors', cache: 'no-store' });
-        return true;
-      } catch {
-        return false;
-      }
-    };
-
-    const handleNetworkChange = async () => {
-      const isOnline = await checkTrueInternet();
-      console.log(`Network status changed: ${isOnline ? 'ONLINE' : 'OFFLINE'}`);
-      
-      const currentStatus = useSettingsStore.getState().isOnline;
-      if (currentStatus !== isOnline) {
-        useSettingsStore.getState().setOnline(isOnline);
-        if (ws.current?.readyState === WebSocket.OPEN) {
-          ws.current.send(JSON.stringify({ type: "NETWORK_UPDATE", is_online: isOnline }));
-        }
-      }
-    };
-
-    // Use standard events as triggers to check true internet
-    window.addEventListener('online', handleNetworkChange);
-    window.addEventListener('offline', handleNetworkChange);
-
-    // Initial check
-    setTimeout(() => {
-      handleNetworkChange();
-    }, 1000);
-
-    // Poll every 15 seconds as a fallback safety measure
-    pollInterval = window.setInterval(() => {
-      handleNetworkChange();
-    }, 15000);
-
     return () => {
-      window.removeEventListener('online', handleNetworkChange);
-      window.removeEventListener('offline', handleNetworkChange);
-      window.clearInterval(pollInterval);
       if (ws.current) {
         ws.current.onclose = null;
         ws.current.close();
@@ -200,9 +174,6 @@ export const useChatWebSocket = () => {
   };
 
   const stopGenerating = () => {
-    const { commitStream } = useChatStore.getState();
-    commitStream();
-    
     if (ws.current?.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify({
         type: "CANCEL_GENERATION"

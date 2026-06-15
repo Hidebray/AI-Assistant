@@ -15,10 +15,7 @@ export const ActivityDrawer: React.FC = () => {
   const { isActivityDrawerOpen, activityDrawerWidth, setActivityDrawerWidth } = useSettingsStore();
   
   const [isResizing, setIsResizing] = useState(false);
-  const [logs, setLogs] = useState<ActivityLog[]>([
-    { id: '1', type: 'system', message: 'AgentCore initialized.', timestamp: new Date().toISOString() },
-    { id: '2', type: 'plugin_email', message: 'EmailScannerWorker is running.', timestamp: new Date().toISOString() }
-  ]);
+  const [logs, setLogs] = useState<ActivityLog[]>([]);
 
   const MIN_WIDTH = 300;
   const MAX_WIDTH = 500;
@@ -103,21 +100,27 @@ export const ActivityDrawer: React.FC = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-white/10">
-        {logs.map(log => {
-          const date = new Date(log.timestamp);
-          const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-          return (
-            <div key={log.id} className="flex gap-3 text-sm">
-              <div className="mt-0.5 shrink-0">
-                {getIcon(log.type)}
+        {logs.length === 0 ? (
+          <div className="text-center text-slate-500 text-sm mt-10">
+            {t('activity.empty', 'Chưa có hoạt động nào.')}
+          </div>
+        ) : (
+          logs.map(log => {
+            const date = new Date(log.timestamp);
+            const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            return (
+              <div key={log.id} className="flex gap-3 text-sm">
+                <div className="mt-0.5 shrink-0">
+                  {getIcon(log.type)}
+                </div>
+                <div>
+                  <span className="text-xs text-slate-400 font-mono mb-1 block">{timeString}</span>
+                  <p className="text-slate-600 dark:text-slate-300 break-words leading-relaxed">{log.message}</p>
+                </div>
               </div>
-              <div>
-                <span className="text-xs text-slate-400 font-mono mb-1 block">{timeString}</span>
-                <p className="text-slate-600 dark:text-slate-300 break-words leading-relaxed">{log.message}</p>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
     </div>
   );

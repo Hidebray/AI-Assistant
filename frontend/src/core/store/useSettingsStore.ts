@@ -9,7 +9,7 @@ interface SettingsState {
   isSettingsOpen: boolean;
   isSidebarOpen: boolean;
   activeTab: 'general' | 'llm' | 'plugins';
-  activeView: 'chat' | 'history' | 'notifications';
+  activeView: 'chat' | 'history' | 'notifications' | 'tasks' | 'calendar';
   isActivityDrawerOpen: boolean;
   activityDrawerWidth: number;
   toasts: ToastMessage[];
@@ -17,7 +17,7 @@ interface SettingsState {
   setSettingsOpen: (open: boolean) => void;
   setSidebarOpen: (open: boolean) => void;
   setActiveTab: (tab: 'general' | 'llm' | 'plugins') => void;
-  setActiveView: (view: 'chat' | 'history' | 'notifications') => void;
+  setActiveView: (view: 'chat' | 'history' | 'notifications' | 'tasks' | 'calendar') => void;
   setActivityDrawerOpen: (open: boolean) => void;
   setActivityDrawerWidth: (width: number) => void;
   setOnline: (online: boolean) => void;

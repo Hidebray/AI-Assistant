@@ -27,6 +27,8 @@ interface ChatState {
   appendStreamChunk: (chunk: string) => void;
   commitStream: () => void;
   clearContext: () => void;
+  pendingSpotlightMessage: string | null;
+  setPendingSpotlightMessage: (msg: string | null) => void;
 }
 
 export const useChatStore = create<ChatState>((set) => ({
@@ -59,5 +61,7 @@ export const useChatStore = create<ChatState>((set) => ({
       isStreaming: false
     };
   }),
-  clearContext: () => set({ messages: [], streamingContent: '', isStreaming: false, activeConversationId: null })
+  clearContext: () => set({ messages: [], streamingContent: '', isStreaming: false, activeConversationId: null }),
+  pendingSpotlightMessage: null,
+  setPendingSpotlightMessage: (msg) => set({ pendingSpotlightMessage: msg })
 }));

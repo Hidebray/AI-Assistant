@@ -16,28 +16,28 @@ const ToastMessage: React.FC<{ message: string, id: string }> = ({ message }) =>
     }
   }, []);
 
-  let icon = <Check size={12} />;
-  let colorClass = "bg-green-500/20 text-green-400";
-  let borderClass = "border-white/10 bg-slate-800";
+  let icon = <Check size={14} />;
+  let colorClass = "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400";
+  let borderClass = "border-slate-200 bg-white/90 dark:border-white/10 dark:bg-slate-800/90 text-slate-800 dark:text-slate-100";
   let displayMessage = message;
 
   if (message.startsWith("[CRITICAL]")) {
-    icon = <AlertTriangle size={12} />;
-    colorClass = "bg-red-500/20 text-red-400";
-    borderClass = "border-red-500/30 bg-red-950/90";
+    icon = <AlertTriangle size={14} />;
+    colorClass = "bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400";
+    borderClass = "border-red-200 bg-red-50/90 dark:border-red-500/30 dark:bg-red-950/90 text-red-900 dark:text-red-100";
     displayMessage = message.replace("[CRITICAL] ", "");
   } else if (message.startsWith("[HIGH]")) {
-    icon = <Info size={12} />;
-    colorClass = "bg-orange-500/20 text-orange-400";
-    borderClass = "border-orange-500/30 bg-orange-950/90";
+    icon = <Info size={14} />;
+    colorClass = "bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400";
+    borderClass = "border-amber-200 bg-amber-50/90 dark:border-amber-500/30 dark:bg-amber-950/90 text-amber-900 dark:text-amber-100";
     displayMessage = message.replace("[HIGH] ", "");
   } else if (message.startsWith("[NORMAL]") || message.startsWith("[LOW]")) {
     displayMessage = message.replace(/\[(NORMAL|LOW)\] /, "");
   }
 
   return (
-    <div ref={elRef} className={`pointer-events-auto flex items-center gap-2 border shadow-glass-widget px-4 py-2 rounded-full text-sm text-slate-100 ${borderClass}`}>
-      <div className={`w-5 h-5 rounded-full flex items-center justify-center ${colorClass}`}>
+    <div ref={elRef} className={`pointer-events-auto flex items-center gap-2.5 border shadow-lg dark:shadow-glass-widget px-4 py-2.5 rounded-2xl text-sm font-medium backdrop-blur-md transition-colors ${borderClass}`}>
+      <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 shadow-sm ${colorClass}`}>
         {icon}
       </div>
       {displayMessage}

@@ -8,10 +8,10 @@ import { ChatInput } from './ChatInput';
 import { useTranslation } from 'react-i18next';
 
 import { useChatWebSocket } from './useChatWebSocket';
-import { OfflineBanner } from '../layout/OfflineBanner';
+
 import { ActivityDrawer } from './ActivityDrawer';
 import { useSettingsStore } from '../../core/store/useSettingsStore';
-import { Activity } from 'lucide-react';
+import { Activity, Sparkles, SquarePen } from 'lucide-react';
 
 interface BackendMessage {
   id: string;
@@ -22,7 +22,7 @@ interface BackendMessage {
 
 export const ChatArea: React.FC = () => {
   const { t } = useTranslation();
-  const { messages, setMessages, activeConversationId, streamingContent, isStreaming } = useChatStore();
+  const { messages, setMessages, activeConversationId, setActiveConversation, streamingContent, isStreaming, pendingSpotlightMessage, setPendingSpotlightMessage } = useChatStore();
   const token = useAuthStore(state => state.token);
   const { isActivityDrawerOpen, setActivityDrawerOpen } = useSettingsStore();
 
@@ -39,6 +39,16 @@ export const ChatArea: React.FC = () => {
     window.addEventListener('send-chat-message', handleSend);
     return () => window.removeEventListener('send-chat-message', handleSend);
   }, [sendMessage]);
+
+  useEffect(() => {
+    if (pendingSpotlightMessage) {
+      setPendingSpotlightMessage(null);
+      // Timeout is needed if the connection was just initiated or component just mounted
+      setTimeout(() => {
+        sendMessage(pendingSpotlightMessage);
+      }, 100);
+    }
+  }, [pendingSpotlightMessage, sendMessage, setPendingSpotlightMessage]);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -100,21 +110,36 @@ export const ChatArea: React.FC = () => {
 
   const isNewChat = messages.length === 0 && !isStreaming && !isLoading;
 
+  const handleNewChat = () => {
+    setActiveConversation(null);
+    setMessages([]);
+  };
+
   return (
     <div className="flex-1 flex overflow-hidden">
       <div className="flex-1 flex flex-col relative h-full min-w-0">
         <header data-tauri-drag-region className="h-14 flex items-center justify-between px-6 border-b border-slate-200 dark:border-white/10 bg-white/50 dark:bg-black/10 backdrop-blur-md shrink-0 select-none z-10 transition-colors">
           <AgentStatusIndicator />
-          <button 
-            onClick={() => setActivityDrawerOpen(!isActivityDrawerOpen)}
-            className={`p-2 rounded-lg transition-colors ${isActivityDrawerOpen ? 'bg-primary-100 text-primary-600 dark:bg-primary-500/20 dark:text-primary-400' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-white/10'}`}
-            title="Hoạt động"
-          >
-            <Activity size={18} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={handleNewChat}
+              className="p-2 rounded-lg transition-colors text-slate-500 hover:bg-slate-100 dark:hover:bg-white/10"
+              title={t('chat.newChat') || 'Trò chuyện mới'}
+            >
+              <SquarePen size={18} />
+            </button>
+            <button 
+              onClick={() => setActivityDrawerOpen(!isActivityDrawerOpen)}
+              className={`p-2 rounded-lg transition-colors relative ${isActivityDrawerOpen ? 'bg-primary-100 text-primary-600 dark:bg-primary-500/20 dark:text-primary-400' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-white/10'}`}
+              title="Hoạt động"
+            >
+              <Activity size={18} />
+              {/* Thêm indicator dot (ví dụ đỏ/xanh) toả sáng */}
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse"></span>
+            </button>
+          </div>
         </header>
 
-      <OfflineBanner />
 
       <div className={`flex-1 overflow-y-auto overflow-x-hidden p-6 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-white/10 scrollbar-track-transparent ${isNewChat ? 'flex flex-col' : ''}`}>
         <div className={`max-w-4xl mx-auto w-full flex flex-col ${isNewChat ? 'flex-1 justify-center' : ''}`}>
@@ -135,7 +160,21 @@ export const ChatArea: React.FC = () => {
 
           {isNewChat ? (
             <div className="flex flex-col items-center justify-center w-full transform -translate-y-10">
-              <span className="text-6xl mb-6 animate-pulse">✨</span>
+              <div className="relative mb-6 group cursor-pointer">
+                {/* Glow Backdrop */}
+                <div className="absolute inset-[-20%] bg-gradient-to-tr from-transparent via-primary-500/30 to-transparent blur-2xl rounded-full animate-pulse group-hover:via-primary-500/50 transition-colors duration-500"></div>
+                
+                {/* Badge Container */}
+                <div className="w-24 h-24 rounded-full bg-slate-900/40 dark:bg-black/40 border border-slate-200/50 dark:border-white/10 flex items-center justify-center shadow-lg backdrop-blur-xl relative z-10 overflow-hidden group-hover:scale-105 transition-transform duration-500">
+                  {/* Rotating Inner Glow */}
+                  <div className="absolute inset-[-150%] bg-gradient-to-tr from-transparent via-primary-glow to-transparent opacity-20 group-hover:opacity-40 transition-opacity duration-500 animate-[spin_4s_linear_infinite]"></div>
+                  
+                  {/* Core Inner Circle */}
+                  <div className="absolute inset-[3px] rounded-full bg-white dark:bg-slate-900 flex items-center justify-center z-10">
+                    <Sparkles size={40} className="text-primary-500 drop-shadow-md" />
+                  </div>
+                </div>
+              </div>
               <p className="text-2xl font-semibold text-slate-800 dark:text-slate-200 mb-8 tracking-tight">{t('chat.greeting')}</p>
               <div className="w-full">
                 <ChatInput sendMessage={sendMessage} stopGenerating={stopGenerating} isNewChat={true} />

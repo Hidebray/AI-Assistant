@@ -1,18 +1,22 @@
 import React from 'react';
-import { Settings, MessageSquare, Clock, Bell, Menu, LogOut } from 'lucide-react';
+import { Settings, MessageSquare, Clock, Bell, Menu, LogOut, ListTodo, Calendar as CalendarIcon } from 'lucide-react';
 import { useSettingsStore } from '../../core/store/useSettingsStore';
 import { useAuthStore } from '../../core/store/useAuthStore';
 import { useTranslation } from 'react-i18next';
+import { useNotificationStore } from '../../core/store/useNotificationStore';
 
 export const Sidebar: React.FC = () => {
   const { t } = useTranslation();
   const { isSidebarOpen, setSidebarOpen, setSettingsOpen, activeView, setActiveView } = useSettingsStore();
   const { logout } = useAuthStore();
+  const { unreadCount } = useNotificationStore();
 
-  const navItems: Array<{ id: 'chat' | 'history' | 'notifications'; icon: any; label: string; badge?: number }> = [
+  const navItems: Array<{ id: 'chat' | 'history' | 'tasks' | 'calendar' | 'notifications'; icon: any; label: string; badge?: number }> = [
     { id: 'chat', icon: MessageSquare, label: t('sidebar.chats') || 'Chat' },
     { id: 'history', icon: Clock, label: t('sidebar.history') || 'Lịch sử' },
-    { id: 'notifications', icon: Bell, label: t('sidebar.notifications') || 'Thông báo', badge: 3 } // Mock badge for now
+    { id: 'tasks', icon: ListTodo, label: t('sidebar.tasks') || 'Công việc' },
+    { id: 'calendar', icon: CalendarIcon, label: t('sidebar.calendar') || 'Lịch trình' },
+    { id: 'notifications', icon: Bell, label: t('sidebar.notifications') || 'Thông báo', badge: unreadCount > 0 ? unreadCount : undefined }
   ];
 
   return (

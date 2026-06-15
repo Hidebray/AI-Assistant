@@ -73,6 +73,10 @@
       "disabled": "Đã tắt plugin {id}",
       "config": "Cấu hình",
       "items": {
+        "task_plugin": {
+          "name": "Quản lý công việc",
+          "description": "Tạo, theo dõi và quản lý danh sách công việc cần làm (To-Do)."
+        },
         "web_search_plugin": {
           "name": "Tìm kiếm Web",
           "description": "Tìm kiếm thông tin trên Internet thông qua DuckDuckGo."
@@ -99,10 +103,15 @@
       "saved": "Đã lưu cấu hình"
     }
   },
+  "activity": {
+    "empty": "Chưa có hoạt động nào."
+  },
   "sidebar": {
     "chats": "Trò chuyện",
     "newChat": "Cuộc trò chuyện mới",
     "history": "Lịch sử",
+    "tasks": "Công việc",
+    "calendar": "Lịch trình",
     "notifications": "Thông báo",
     "settings": "Cài đặt",
     "logout": "Đăng xuất"
@@ -112,7 +121,8 @@
     "greeting": "Xin chào! Mình có thể giúp gì cho bạn hôm nay?",
     "inputPlaceholder": "Nhập tin nhắn...",
     "loadingHistory": "Đang tải lịch sử trò chuyện...",
-    "activity": "Hoạt động (Activity)",
+    "activity": "Hoạt động",
+    "newChat": "Trò chuyện mới",
     "placeholder": "Hỏi AAA bất cứ điều gì...",
     "disclaimer": "AAA có thể mắc sai lầm. Hãy kiểm tra lại các thông tin quan trọng.",
     "stop": "Dừng",

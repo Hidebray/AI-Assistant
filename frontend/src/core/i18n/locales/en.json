@@ -73,6 +73,10 @@
       "disabled": "Disabled plugin {id}",
       "config": "Config",
       "items": {
+        "task_plugin": {
+          "name": "Task Manager",
+          "description": "Create, track, and manage your to-do list."
+        },
         "web_search_plugin": {
           "name": "Web Search",
           "description": "Searches the internet for information via DuckDuckGo."
@@ -99,10 +103,15 @@
       "saved": "Settings saved"
     }
   },
+  "activity": {
+    "empty": "No activity yet."
+  },
   "sidebar": {
     "chats": "Chats",
     "newChat": "New Chat",
     "history": "History",
+    "tasks": "Tasks",
+    "calendar": "Calendar",
     "notifications": "Notifications",
     "settings": "Settings",
     "logout": "Logout",
@@ -126,6 +135,7 @@
     "inputPlaceholder": "Type a message...",
     "loadingHistory": "Loading chat history...",
     "activity": "Activity",
+    "newChat": "New Chat",
     "placeholder": "Ask AAA anything...",
     "disclaimer": "AAA can make mistakes. Verify important information.",
     "stop": "Stop",

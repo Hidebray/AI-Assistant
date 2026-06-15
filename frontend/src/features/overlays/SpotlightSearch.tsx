@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Search } from 'lucide-react';
 import { register, unregister } from '@tauri-apps/plugin-global-shortcut';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { emit } from '@tauri-apps/api/event';
 
 export const SpotlightSearch: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -50,8 +51,9 @@ export const SpotlightSearch: React.FC = () => {
   const handleKeyDown = async (e: React.KeyboardEvent) => {
     const appWindow = getCurrentWebviewWindow();
     if (e.key === 'Enter' && query.trim()) {
-      // Bắn lệnh qua WebSocket (TODO)
-      console.log('Sending command:', query);
+      // Send command via Tauri event to the main window
+      console.log('Sending command via event:', query);
+      await emit('spotlight-command', { message: query.trim() });
       setQuery('');
       await appWindow.hide();
     } else if (e.key === 'Escape') {
