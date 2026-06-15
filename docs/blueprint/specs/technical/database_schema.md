@@ -189,7 +189,7 @@ Lưu trữ thông tin công việc (Todo List) và deadline của người dùng
 | `deadline` | DATETIME | NULL | Thời hạn hoàn thành công việc. |
 | `status` | VARCHAR(20) | DEFAULT 'pending' | Trạng thái (`pending`, `in_progress`, `completed`). |
 | `priority` | VARCHAR(20) | DEFAULT 'medium' | Mức độ ưu tiên (`low`, `medium`, `high`). |
-| `source_origin` | VARCHAR(50) | DEFAULT 'user' | Nguồn tạo (`user`, `agent`, `offline_task`). |
+| `source_origin` | VARCHAR(50) | DEFAULT 'user' | Nguồn tạo (`user`, `agent`). |
 | `is_deleted` | BOOLEAN | DEFAULT 0 | Cờ xóa mềm (Soft delete). |
 | `is_notified` | BOOLEAN | DEFAULT 0 | Đã đẩy notification deadline hay chưa. |
 | `created_at` | DATETIME | DEFAULT CURRENT_TIMESTAMP | Thời điểm tạo. |

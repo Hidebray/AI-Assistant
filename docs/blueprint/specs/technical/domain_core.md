@@ -116,7 +116,7 @@ classDiagram
 - **Public Methods**:
   - `def evaluate_context(self, context: ContextDTO) -> ActionDTO:`
 - **Logic hoạt động**:
-  Sử dụng LLM kết hợp hệ thống rule tĩnh (nếu đang ở mode offline) để phân loại Intent (ý định). Trả về một `ActionDTO` mang thông tin về hành động tiếp theo, chẳng hạn như `TOOL_CALL`, `DIRECT_RESPONSE`, hoặc `REQUIRE_CLARIFICATION`.
+  Sử dụng LLM để phân loại Intent (ý định). Trả về một `ActionDTO` mang thông tin về hành động tiếp theo, chẳng hạn như `TOOL_CALL`, `DIRECT_RESPONSE`, hoặc `REQUIRE_CLARIFICATION`.
 
 ### 2.4. `MemoryAggregate` (Tổng hợp Trí nhớ AI)
 - **Trách nhiệm duy nhất (SRP)**: Trừu tượng hóa quá trình lưu trữ và truy xuất ngữ cảnh (ngắn hạn/dài hạn) của Agent mà hoàn toàn không can thiệp vào cú pháp SQL.

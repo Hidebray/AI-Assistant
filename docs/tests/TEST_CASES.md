@@ -16,7 +16,6 @@ Dưới đây là bảng tổng hợp toàn bộ các Test Cases cho 5 tính nă
 | 10 | TC-CAL-003 | Ranh giới thời gian đúng 5 phút 00 giây (Boundary) | In-app Calendar | High | Kiểm thử vùng cận ranh giới của điều kiện cảnh báo thời gian. |
 | 11 | TC-HYB-001 | Tự động Fallback từ OpenAI sang Ollama khi rớt mạng (Positive) | Hybrid LLM | Critical | Giả lập tắt mạng để API OpenAI bị timeout, kiểm tra xem LLM Factory có tự rẽ sang Local Model không. |
 | 12 | TC-HYB-002 | Cả Cloud và Local đều chết (Negative) | Hybrid LLM | High | Tắt mạng và tắt cả Ollama, kiểm tra hệ thống có trả về thông báo lỗi thân thiện thay vì crash không. |
-| 13 | TC-OFF-001 | Gõ lệnh tĩnh `/calendar` khi ngoại tuyến (Positive) | Offline Commands | High | Kiểm tra FallbackEngine bắt đúng Regex và trả về danh sách lịch trình. |
-| 14 | TC-OFF-002 | Lệnh tĩnh chứa ký tự lạ/chuỗi rỗng (Boundary/Negative) | Offline Commands | Low | Gõ `/calendar ???` hoặc `/not_exist` để kiểm tra độ robust của Regex Parser. |
+
 | 15 | TC-SET-001 | Tắt quyền truy cập Mạng của Email Plugin | Settings | High | Vô hiệu hóa permission `network` của EmailPlugin và gọi tool, kỳ vọng báo lỗi Authorization. |
 | 16 | TC-SET-002 | Cập nhật API Key mới cho OpenAI | Settings | Medium | Lưu API key bị sai và kiểm tra kết nối có bị từ chối không, sau đó sửa lại key đúng. |
