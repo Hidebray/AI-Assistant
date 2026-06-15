@@ -19,7 +19,6 @@ from backend.domain.events.chat_events import (
     NetworkStateChangedEvent,
     ChatCancelRequestedEvent
 )
-from backend.application.use_cases.fallback_engine import FallbackEngine
 
 logger = logging.getLogger(__name__)
 
@@ -27,23 +26,37 @@ class ChatWorker:
     def __init__(self, event_bus: IEventBus, plugin_manager):
         self.event_bus = event_bus
         self.plugin_manager = plugin_manager
-        self.is_online = True
-        self.fallback_engine = FallbackEngine()
         self.active_cancellations = set()
 
     def start(self):
         self.event_bus.subscribe("Chat.Requested", self.handle_chat_requested)
-        self.event_bus.subscribe("NetworkMonitor", self.handle_network_change)
         self.event_bus.subscribe("Chat.CancelRequested", self.handle_cancel_requested)
 
     async def handle_cancel_requested(self, event: ChatCancelRequestedEvent):
         self.active_cancellations.add(event.client_id)
 
-    async def handle_network_change(self, event: NetworkStateChangedEvent):
-        self.is_online = event.is_online
-
     async def _emit_status(self, client_id: str, status: str):
         await self.event_bus.publish(ChatStatusEvent(source_origin="chat_worker", client_id=client_id, status=status))
+
+    def _get_status_text(self, key: str, language: str, suffix: str = "") -> str:
+        lang = language if language in ["vi", "en"] else "vi"
+        texts = {
+            "vi": {
+                "compressing": "Đang nén dữ liệu cũ...",
+                "thinking": "Đang suy nghĩ...",
+                "running": "Đang chạy công cụ: ",
+                "generating": "Đang tạo câu trả lời...",
+                "stopped": "\n\n*(Đã dừng tạo câu trả lời)*"
+            },
+            "en": {
+                "compressing": "Compressing old memory...",
+                "thinking": "Thinking...",
+                "running": "Running tool: ",
+                "generating": "Generating...",
+                "stopped": "\n\n*(Generation stopped by user)*"
+            }
+        }
+        return texts[lang].get(key, key) + suffix
 
     def _count_tokens(self, messages: List[Dict[str, str]], model: str = "gpt-4o-mini") -> int:
         try:
@@ -78,20 +91,6 @@ class ChatWorker:
         conversation.last_summarized_message_id = new_messages[-1].id
         await db.commit()
         return new_summary
-
-    async def _execute_fallback(self, content: str, user_id: str, client_id: str, language: str) -> str:
-        await self._emit_status(client_id, "Executing Static Command..." if content.strip().startswith("/") else "Offline Mode...")
-        fallback_response = await self.fallback_engine.process(content, user_id, language=language)
-        
-        for word in fallback_response.split(" "):
-            if client_id in self.active_cancellations:
-                logger.info(f"Fallback Generation CANCELLED for {client_id}")
-                break
-            chunk = word + " "
-            await self.event_bus.publish(ChatStreamChunkEvent(source_origin="chat_worker", client_id=client_id, chunk=chunk))
-            await asyncio.sleep(0.02)
-            
-        return fallback_response
 
     async def handle_chat_requested(self, event: ChatRequestedEvent):
         client_id = event.client_id
@@ -155,9 +154,11 @@ class ChatWorker:
                     
                 total_tokens = self._count_tokens(context_with_summary)
                 
+                language = getattr(event, "language", "vi")
+                
                 if total_tokens > 3000 and len(unsummarized_messages) > 3:
-                    await self._emit_status(client_id, "Compressing old memory...")
-                    adapter = await LLMFactory.get_adapter(db, user_id, getattr(event, "language", "vi"))
+                    await self._emit_status(client_id, self._get_status_text("compressing", language))
+                    adapter = await LLMFactory.get_adapter(db, user_id, language)
                     # Bỏ tin nhắn hiện hành ra khỏi việc tóm tắt để tránh bị kẹt
                     msgs_to_summarize = unsummarized_messages[:-1] if unsummarized_messages[-1].content == content else unsummarized_messages
                     new_summary = await self._summarize_context(adapter, db, conversation, msgs_to_summarize, conversation.summary_content)
@@ -168,96 +169,94 @@ class ChatWorker:
                     if current_msg_dict:
                         context_with_summary.append(current_msg_dict)
 
-                if content.strip().startswith("/") or not self.is_online:
-                    # Offline Fallback Routing / Static Commands
-                    language = getattr(event, "language", "vi")
-                    full_response = await self._execute_fallback(content, user_id, client_id, language)
-                    plan_metadata = None
-                else:
-                    # Online LLM Routing
-                    facts = await MemoryManager().search_similar_facts(db, user_id, content, top_k=5)
-    
-                    # Initialize Agent
-                    language = getattr(event, "language", "vi")
-                    adapter = await LLMFactory.get_adapter(db, user_id, language)
-                    agent = AgentCore(llm_adapter=adapter, plugin_manager=self.plugin_manager)
-    
-                    plan_metadata = None
-                    full_response = ""
-    
-                    max_iterations = 3
-                    iteration = 0
-                    
-                    # Context for agent including conversation history (without current message)
-                    agent_context = context_with_summary[:-1] if current_msg_dict else context_with_summary
-                    all_execution_results = []
-                    tool_logs = []
-                    called_tools = set()
-                    
-                    while iteration < max_iterations:
-                        await self._emit_status(client_id, "Thinking...")
-                        
-                        current_prompt = content
-                        if tool_logs:
-                            current_prompt += "\n\nTool Results so far:\n" + "\n".join(tool_logs)
-                            
-                        action = await agent.determine_action(text=current_prompt, short_term_history=agent_context, long_term_facts=facts, language=language)
-                        
-                        if action.action_type == "DONE" or action.action_type == "DIRECT_RESPONSE" or not action.tool_name:
-                            break
-                            
-                        # Deduplicate tool calls
-                        if action.tool_name in called_tools:
-                            logger.info(f"Skipping duplicate tool call: {action.tool_name}")
-                            break
-                        called_tools.add(action.tool_name)
-                            
-                        # It is a TOOL_CALL
-                        await self._emit_status(client_id, f"Running {action.tool_name}...")
-                        executor = ToolExecutor(self.plugin_manager)
-                        
-                        # No Plan UI Approval needed anymore
-                        payload = action.tool_arguments or {}
-                        payload["user_id"] = user_id
-                        result = await executor.execute_tool(action.tool_name, payload)
-                        all_execution_results.append(result)
-                        
-                        # Append result to logs
-                        result_str = getattr(result, 'result_data', str(result)) if getattr(result, 'is_success', True) else getattr(result, 'error_message', 'Unknown error')
-                        tool_logs.append(f"- {action.tool_name} returned: {result_str}")
-                        
-                        iteration += 1
+                # Online LLM Routing
+                facts = await MemoryManager().search_similar_facts(db, user_id, content, top_k=5)
 
-                    # Stream final response
-                    await self._emit_status(client_id, "Generating...")
-                    final_user_content = content
-                    if tool_logs:
-                        final_user_content += "\n\nTool Results:\n" + "\n".join(tool_logs)
-                        final_user_content += "\n\n(System: You have executed the necessary tools. Synthesize the final outcome and reply to the user based on the tool results.)"
-                    report_context = agent_context + [{"role": "user", "content": final_user_content}]
+                # Initialize Agent
+                adapter = await LLMFactory.get_adapter(db, user_id, language)
+                agent = AgentCore(llm_adapter=adapter, plugin_manager=self.plugin_manager)
+
+                plan_metadata = None
+                full_response = ""
+
+                max_iterations = 3
+                iteration = 0
+                
+                # Context for agent including conversation history (without current message)
+                agent_context = context_with_summary[:-1] if current_msg_dict else context_with_summary
+                all_execution_results = []
+                tool_logs = []
+                called_tools = set()
+                
+                while iteration < max_iterations:
+                    await self._emit_status(client_id, self._get_status_text("thinking", language))
                     
-                    system_prompt_with_facts = adapter.system_prompt
-                    if facts:
-                        system_prompt_with_facts += "\n\nFacts:\n" + "\n".join([f"- {f}" for f in facts])
+                    current_prompt = content
+                    if tool_logs:
+                        current_prompt += "\n\nTool Results so far:\n" + "\n".join(tool_logs)
                         
-                    messages_payload = [{"role": "system", "content": system_prompt_with_facts}] + report_context
-                    logger.info(f"=== LLM MESSAGES PAYLOAD ===\n{messages_payload}")
-                    try:
-                        async for chunk in adapter.generate_stream(messages=messages_payload):
-                            if client_id in self.active_cancellations:
-                                logger.info(f"LLM Generation CANCELLED for {client_id}")
-                                break
-                            full_response += chunk
-                            await self.event_bus.publish(ChatStreamChunkEvent(source_origin="chat_worker", client_id=client_id, chunk=chunk))
-                    except Exception as e:
-                        logger.error(f"LLM stream error: {e}", exc_info=True)
-                        error_str = str(e).lower()
-                        if "404" in error_str or "connect" in error_str or "providers failed" in error_str:
-                            raise e # Re-raise for Fallback Engine to handle
-                        else:
-                            user_friendly_msg = f"Lỗi phản hồi từ AI: {str(e)}"
-                            await self.event_bus.publish(ChatDoneEvent(source_origin="chat_worker", client_id=client_id, error=user_friendly_msg))
-                            return
+                    action = await agent.determine_action(text=current_prompt, short_term_history=agent_context, long_term_facts=facts, language=language)
+                    
+                    if action.action_type == "DONE" or action.action_type == "DIRECT_RESPONSE" or not action.tool_name:
+                        break
+                        
+                    # Deduplicate tool calls
+                    if action.tool_name in called_tools:
+                        logger.info(f"Skipping duplicate tool call: {action.tool_name}")
+                        break
+                    called_tools.add(action.tool_name)
+                        
+                    # It is a TOOL_CALL
+                    await self._emit_status(client_id, self._get_status_text("running", language, action.tool_name))
+                    executor = ToolExecutor(self.plugin_manager)
+                    
+                    # No Plan UI Approval needed anymore
+                    payload = action.tool_arguments or {}
+                    payload["user_id"] = user_id
+                    payload["language"] = language
+                    result = await executor.execute_tool(action.tool_name, payload)
+                    all_execution_results.append(result)
+                    
+                    # Append result to logs
+                    result_str = getattr(result, 'result_data', str(result)) if getattr(result, 'is_success', True) else getattr(result, 'error_message', 'Unknown error')
+                    tool_logs.append(f"- {action.tool_name} returned: {result_str}")
+                    
+                    iteration += 1
+
+                # Stream final response
+                await self._emit_status(client_id, self._get_status_text("generating", language))
+                final_user_content = content
+                if tool_logs:
+                    final_user_content += "\n\nTool Results:\n" + "\n".join(tool_logs)
+                    final_user_content += "\n\n(System: You have executed the necessary tools. Synthesize the final outcome. CRITICAL: You MUST strictly apply the LANGUAGE RESOLUTION RULE to determine the language of your response!)"
+                report_context = agent_context + [{"role": "user", "content": final_user_content}]
+                
+                system_prompt_with_facts = adapter.system_prompt
+                if facts:
+                    system_prompt_with_facts += "\n\nFacts:\n" + "\n".join([f"- {f}" for f in facts])
+                    
+                messages_payload = [{"role": "system", "content": system_prompt_with_facts}] + report_context
+                logger.info(f"=== LLM MESSAGES PAYLOAD ===\n{messages_payload}")
+                try:
+                    async for chunk in adapter.generate_stream(messages=messages_payload):
+                        if client_id in self.active_cancellations:
+                            logger.info(f"LLM Generation CANCELLED for {client_id}")
+                            stop_msg = self._get_status_text("stopped", language)
+                            await self._emit_status(client_id, "Đã hủy" if language == "vi" else "Cancelled")
+                            full_response += stop_msg
+                            await self.event_bus.publish(ChatStreamChunkEvent(source_origin="chat_worker", client_id=client_id, chunk=stop_msg))
+                            break
+                        full_response += chunk
+                        await self.event_bus.publish(ChatStreamChunkEvent(source_origin="chat_worker", client_id=client_id, chunk=chunk))
+                except Exception as e:
+                    logger.error(f"LLM stream error: {e}", exc_info=True)
+                    error_str = str(e).lower()
+                    if "404" in error_str or "connect" in error_str or "providers failed" in error_str:
+                        raise e # Re-raise for error handling below
+                    else:
+                        user_friendly_msg = f"Lỗi phản hồi từ AI: {str(e)}"
+                        await self.event_bus.publish(ChatDoneEvent(source_origin="chat_worker", client_id=client_id, error=user_friendly_msg))
+                        return
 
                 # Lưu Message AI
                 ai_msg = Message(
@@ -271,8 +270,7 @@ class ChatWorker:
                 await db.commit()
 
             # Async Extract Memory
-            if self.is_online:
-                asyncio.create_task(MemoryManager().extract_and_store_facts(user_id, content, full_response))
+            asyncio.create_task(MemoryManager().extract_and_store_facts(user_id, content, full_response))
 
             await self.event_bus.publish(ChatDoneEvent(source_origin="chat_worker", client_id=client_id))
 
@@ -280,26 +278,7 @@ class ChatWorker:
             logger.error(f"ChatWorker Error: {e}", exc_info=True)
             error_str = str(e).lower()
             if "providers failed" in error_str or "404" in error_str or "connect" in error_str:
-                logger.warning(f"LLM completely failed for {client_id}. Redirecting to Fallback Engine.")
-                try:
-                    language = getattr(event, "language", "vi")
-                    full_response = await self._execute_fallback(content, user_id, client_id, language)
-                    
-                    async with db_manager.session() as db:
-                        ai_msg = Message(
-                            conversation_id=conversation_id,
-                            sender_role="assistant",
-                            source_origin="fallback",
-                            content=full_response,
-                        )
-                        db.add(ai_msg)
-                        await db.commit()
-                        
-                    await self.event_bus.publish(ChatDoneEvent(source_origin="chat_worker", client_id=client_id))
-                    return
-                except Exception as fallback_e:
-                    logger.error(f"Fallback engine also failed: {fallback_e}")
-                    error_msg = "Không thể kết nối đến LLM. Vui lòng cấu hình API Key trong Settings hoặc bật Local LLM (Ollama)."
+                error_msg = "Không thể kết nối đến LLM. Vui lòng cấu hình API Key trong Settings hoặc bật Local LLM (Ollama)."
             else:
                 error_msg = f"Internal Error: {str(e)}"
             await self.event_bus.publish(ChatDoneEvent(source_origin="chat_worker", client_id=client_id, error=error_msg))

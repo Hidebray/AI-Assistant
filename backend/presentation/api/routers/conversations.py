@@ -30,6 +30,7 @@ async def get_conversations(
         {
             "id": row.Conversation.id,
             "title": row.Conversation.title or "New Conversation",
+            "summary_content": row.Conversation.summary_content,
             "updated_at": row.Conversation.updated_at.isoformat(),
             "message_count": row.message_count
         }

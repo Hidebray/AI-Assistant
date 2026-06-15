@@ -6,7 +6,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
 from backend.presentation.api.limiter import limiter
 
-from backend.presentation.api.routers import auth, settings, conversations, alerts, calendar, google_auth, ollama
+from backend.presentation.api.routers import auth, settings, conversations, alerts, calendar, tasks, google_auth, ollama, notifications
 from backend.presentation.websocket import chat
 from backend.infrastructure.database.session import db_manager
 from backend.infrastructure.messaging.async_event_bus import LocalEventBus
@@ -75,6 +75,12 @@ async def lifespan(app: FastAPI):
     alert_engine.add_rule(VIPEmailRule())
     alert_engine.add_rule(AutoSyncRule())
     app.state.alert_engine = alert_engine
+    
+    # Init Notification Service
+    from backend.application.services.notification_service import NotificationService
+    notification_service = NotificationService(event_bus=event_bus)
+    notification_service.start()
+    app.state.notification_service = notification_service
     
     # Subscribe Alert Engine to EventBus manually
     event_bus.subscribe("System.NewEmail", alert_engine.process_event)
@@ -163,11 +169,13 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(settings.router)
 app.include_router(calendar.router)
+app.include_router(tasks.router)
 app.include_router(conversations.router)
 app.include_router(chat.router)
 app.include_router(alerts.router)
 app.include_router(google_auth.router)
 app.include_router(ollama.router)
+app.include_router(notifications.router)
 
 @app.get("/")
 async def root():

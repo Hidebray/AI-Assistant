@@ -38,6 +38,7 @@ class User(Base):
     memory_nodes: Mapped[list["MemoryNode"]] = relationship("MemoryNode", back_populates="user", cascade="all, delete-orphan")
     settings: Mapped[list["UserSetting"]] = relationship("UserSetting", back_populates="user", cascade="all, delete-orphan")
     tasks: Mapped[list["Task"]] = relationship("Task", back_populates="user", cascade="all, delete-orphan")
+    notifications: Mapped[list["Notification"]] = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
 
 
 class UserSetting(Base):
@@ -148,6 +149,21 @@ class MemoryNode(Base):
     last_accessed: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
     user: Mapped["User"] = relationship("User", back_populates="memory_nodes")
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    type: Mapped[str] = mapped_column(String(50), default="info") # info, success, warning, error
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_important: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+
+    user: Mapped["User"] = relationship("User", back_populates="notifications")
+
 
 class DeadLetterEvent(Base):
     __tablename__ = "dead_letter_events"

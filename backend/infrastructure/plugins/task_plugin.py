@@ -100,6 +100,7 @@ class TaskPlugin(BasePlugin):
             return {"status": "error", "message": f"Unknown tool: {tool_name}"}
 
     async def _create_task(self, payload: dict):
+        language = payload.get("language", "vi")
         user_id = payload.get("user_id")
         title = payload.get("title")
         description = payload.get("description")
@@ -107,7 +108,7 @@ class TaskPlugin(BasePlugin):
         priority = payload.get("priority", "medium")
 
         if not user_id or not title:
-            return {"status": "error", "message": "Missing required fields: user_id, title"}
+            return {"status": "error", "message": "Thiếu user_id hoặc title" if language == "vi" else "Missing required fields: user_id, title"}
 
         deadline_utc = None
         if deadline_str:
@@ -118,12 +119,12 @@ class TaskPlugin(BasePlugin):
                     dt = dt.replace(tzinfo=local_tz)
                 deadline_utc = dt.astimezone(timezone.utc).replace(tzinfo=None)
             except Exception as e:
-                return {"status": "error", "message": f"Invalid deadline format: {e}"}
+                return {"status": "error", "message": f"Định dạng thời gian không hợp lệ: {e}" if language == "vi" else f"Invalid deadline format: {e}"}
 
         async with db_manager.session() as db:
             user = await db.get(User, user_id)
             if not user:
-                return {"status": "error", "message": "User not found"}
+                return {"status": "error", "message": "Không tìm thấy người dùng" if language == "vi" else "User not found"}
 
             new_task = Task(
                 user_id=user_id,
@@ -139,7 +140,7 @@ class TaskPlugin(BasePlugin):
 
         return {
             "status": "success",
-            "message": f"Task '{title}' created successfully.",
+            "message": f"Đã tạo công việc '{title}' thành công." if language == "vi" else f"Task '{title}' created successfully.",
             "data": {
                 "title": title,
                 "deadline": deadline_str,
@@ -148,11 +149,12 @@ class TaskPlugin(BasePlugin):
         }
 
     async def _get_tasks(self, payload: dict):
+        language = payload.get("language", "vi")
         user_id = payload.get("user_id")
         status_filter = payload.get("status", "pending")
 
         if not user_id:
-            return {"status": "error", "message": "Missing user_id"}
+            return {"status": "error", "message": "Thiếu user_id" if language == "vi" else "Missing user_id"}
 
         async with db_manager.session() as db:
             stmt = select(Task).where(Task.user_id == user_id, Task.is_deleted == False)
@@ -165,7 +167,7 @@ class TaskPlugin(BasePlugin):
             tasks = result.scalars().all()
 
             if not tasks:
-                return {"status": "success", "message": f"No {status_filter} tasks found.", "tasks": []}
+                return {"status": "success", "message": f"Không tìm thấy công việc nào trạng thái {status_filter}." if language == "vi" else f"No {status_filter} tasks found.", "tasks": []}
 
             local_tz = datetime.now().astimezone().tzinfo
             task_list = []
@@ -187,17 +189,18 @@ class TaskPlugin(BasePlugin):
 
         return {
             "status": "success",
-            "message": f"Found {len(task_list)} tasks.",
+            "message": f"Tìm thấy {len(task_list)} công việc." if language == "vi" else f"Found {len(task_list)} tasks.",
             "tasks": task_list
         }
 
     async def _update_task_status(self, payload: dict):
+        language = payload.get("language", "vi")
         user_id = payload.get("user_id")
         title_keyword = payload.get("title_keyword")
         new_status = payload.get("new_status")
 
         if not user_id or not title_keyword or not new_status:
-            return {"status": "error", "message": "Missing user_id, title_keyword, or new_status"}
+            return {"status": "error", "message": "Thiếu thông tin bắt buộc" if language == "vi" else "Missing user_id, title_keyword, or new_status"}
 
         async with db_manager.session() as db:
             stmt = select(Task).where(
@@ -210,19 +213,20 @@ class TaskPlugin(BasePlugin):
             task = result.scalar_one_or_none()
 
             if not task:
-                return {"status": "error", "message": f"No task found matching '{title_keyword}'"}
+                return {"status": "error", "message": f"Không tìm thấy công việc nào chứa từ khóa '{title_keyword}'" if language == "vi" else f"No task found matching '{title_keyword}'"}
 
             task.status = new_status
             await db.commit()
 
-        return {"status": "success", "message": f"Task '{task.title}' marked as {new_status}."}
+        return {"status": "success", "message": f"Đã đánh dấu công việc '{task.title}' là {new_status}." if language == "vi" else f"Task '{task.title}' marked as {new_status}."}
 
     async def _delete_task(self, payload: dict):
+        language = payload.get("language", "vi")
         user_id = payload.get("user_id")
         title_keyword = payload.get("title_keyword")
 
         if not user_id or not title_keyword:
-            return {"status": "error", "message": "Missing user_id or title_keyword"}
+            return {"status": "error", "message": "Thiếu thông tin bắt buộc" if language == "vi" else "Missing user_id or title_keyword"}
 
         async with db_manager.session() as db:
             stmt = select(Task).where(
@@ -235,9 +239,9 @@ class TaskPlugin(BasePlugin):
             task = result.scalar_one_or_none()
 
             if not task:
-                return {"status": "error", "message": f"No task found matching '{title_keyword}'"}
+                return {"status": "error", "message": f"Không tìm thấy công việc nào chứa từ khóa '{title_keyword}'" if language == "vi" else f"No task found matching '{title_keyword}'"}
 
             task.is_deleted = True
             await db.commit()
 
-        return {"status": "success", "message": f"Task '{task.title}' deleted."}
+        return {"status": "success", "message": f"Đã xóa công việc '{task.title}'." if language == "vi" else f"Task '{task.title}' deleted."}
