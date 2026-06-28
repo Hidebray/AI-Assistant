@@ -6,7 +6,8 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Copy, Check } from 'lucide-react';
 
-const CodeBlock = ({ match, children, rest }: any) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const CodeBlock = ({ match, children }: any) => {
   const [copied, setCopied] = React.useState(false);
 
   const handleCopy = () => {

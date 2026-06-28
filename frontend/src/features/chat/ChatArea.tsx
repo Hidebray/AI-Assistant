@@ -35,6 +35,7 @@ export const ChatArea: React.FC = () => {
   }, [messages, streamingContent]);
 
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleSend = (e: any) => sendMessage(e.detail);
     window.addEventListener('send-chat-message', handleSend);
     return () => window.removeEventListener('send-chat-message', handleSend);
@@ -111,7 +112,7 @@ export const ChatArea: React.FC = () => {
   const isNewChat = messages.length === 0 && !isStreaming && !isLoading;
 
   const handleNewChat = () => {
-    setActiveConversation(null);
+    setActiveConversation("");
     setMessages([]);
   };
 

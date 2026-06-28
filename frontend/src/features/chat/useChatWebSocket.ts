@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useChatStore } from '../../core/store/useChatStore';
 import { useAuthStore } from '../../core/store/useAuthStore';
-import { useSettingsStore } from '../../core/store/useSettingsStore';
+//import { useSettingsStore } from '../../core/store/useSettingsStore';
 import { useAlertStore } from '../../core/store/useAlertStore';
 
 export const useChatWebSocket = () => {
