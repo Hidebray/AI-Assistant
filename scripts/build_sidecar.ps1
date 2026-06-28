@@ -57,6 +57,7 @@ pyinstaller --name "backend" --onefile `
   --collect-data tiktoken `
   --hidden-import tiktoken_ext.openai_public `
   --hidden-import tiktoken_ext.bpe `
+  --add-data "backend/credentials.json;." `
   --collect-submodules backend backend/main.py
 
 if (-not $?) {

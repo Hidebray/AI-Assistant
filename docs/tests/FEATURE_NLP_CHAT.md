@@ -125,3 +125,59 @@
 | Test Steps      | <ol><li>Mở một đoạn chat mới.</li><li>Bấm vào icon Tia sét (Zap) góc trái ô chat.</li><li>Chọn một mẫu lệnh trong danh sách dropdown.</li><li>Kiểm tra nội dung ô chat có được điền đúng template không.</li></ol> |
 | Actual Output   |                                                        |
 | Result          |                                                        |
+
+#### Ghi nhớ thông tin cá nhân (Memory Plugin) <TC-NLP-009>
+
+| Field           | Content                                                |
+| --------------- | ------------------------------------------------------ |
+| Test Case ID    | TC-NLP-009                                             |
+| Test Case       | Kiểm tra khả năng lưu trữ thông tin cá nhân vào trí nhớ dài hạn. |
+| Related Feature | NLP Chat                                              |
+| Context         | Hệ thống đã khởi động thành công. |
+| Input Data      | Câu lệnh: "Sở thích của tôi là lập trình Python, hãy nhớ điều này." |
+| Expected Output | Agent tự động gọi Tool lưu bộ nhớ và trả về xác nhận. Sau đó, khi hỏi "Tôi thích ngôn ngữ nào?", Agent truy xuất đúng "Python". |
+| Test Steps      | <ol><li>Nhập câu lệnh ghi nhớ vào thanh chat.</li><li>Nhấn Gửi.</li><li>Kiểm tra thông báo AI xác nhận đã nhớ.</li><li>Bắt đầu cuộc trò chuyện mới hoặc hỏi luôn "Tôi thích ngôn ngữ nào?".</li><li>Xác nhận câu trả lời có chứa thông tin đã lưu.</li></ol> |
+| Actual Output   |                                                        |
+| Result          |                                                        |
+
+#### Quản lý công việc (Task Plugin) <TC-NLP-010>
+
+| Field           | Content                                                |
+| --------------- | ------------------------------------------------------ |
+| Test Case ID    | TC-NLP-010                                             |
+| Test Case       | Kiểm tra khả năng tạo công việc và gọi tool liên tiếp (Chain of Thought). |
+| Related Feature | NLP Chat                                              |
+| Context         | Database SQLite đã sẵn sàng. |
+| Input Data      | Câu lệnh: "Thêm việc mua sắm, sau đó hiển thị toàn bộ task hiện có." |
+| Expected Output | Agent gọi liên tiếp 2 tool: `create_task` và `list_tasks`. Sau đó hiển thị danh sách task đã cập nhật cho người dùng. |
+| Test Steps      | <ol><li>Nhập câu lệnh tạo task và liệt kê vào thanh chat.</li><li>Gửi tin nhắn.</li><li>Kiểm tra log luồng suy luận xem Agent có gọi 2 tool không.</li><li>Xác nhận hiển thị UI trả về kết quả đúng.</li></ol> |
+| Actual Output   |                                                        |
+| Result          |                                                        |
+
+#### Tra cứu Web (Web Search Plugin) <TC-NLP-011>
+
+| Field           | Content                                                |
+| --------------- | ------------------------------------------------------ |
+| Test Case ID    | TC-NLP-011                                             |
+| Test Case       | Kiểm tra khả năng kết nối mạng để tìm kiếm thông tin theo thời gian thực. |
+| Related Feature | NLP Chat                                              |
+| Context         | Máy tính có kết nối Internet ổn định. |
+| Input Data      | Câu lệnh: "Giá vàng hôm nay là bao nhiêu?" |
+| Expected Output | Agent gọi tool `web_search` để lấy dữ liệu mới nhất và tổng hợp câu trả lời cho người dùng. |
+| Test Steps      | <ol><li>Nhập câu lệnh hỏi thông tin cập nhật vào thanh chat.</li><li>Nhấn Gửi.</li><li>Kiểm tra xem Agent có hiển thị đang thực thi tool tìm kiếm hay không.</li><li>Đọc câu trả lời xem có chứa thông tin mới không (không bị hallucinate).</li></ol> |
+| Actual Output   |                                                        |
+| Result          |                                                        |
+
+#### Thiếu tham số (Missing Arguments Edge Case) <TC-NLP-012>
+
+| Field           | Content                                                |
+| --------------- | ------------------------------------------------------ |
+| Test Case ID    | TC-NLP-012                                             |
+| Test Case       | Kiểm tra khả năng bắt lỗi thiếu thông tin, AI KHÔNG được bịa đặt tham số (Negative). |
+| Related Feature | NLP Chat                                              |
+| Context         | Hệ thống hoạt động bình thường. |
+| Input Data      | Câu lệnh: "Tạo lịch cuộc họp." (Cố tình thiếu ngày giờ). |
+| Expected Output | Agent không gọi tool `create_calendar_event` ngay mà sẽ trả lời yêu cầu người dùng cung cấp thêm thời gian. |
+| Test Steps      | <ol><li>Nhập câu lệnh mập mờ thiếu ngày giờ vào thanh chat.</li><li>Gửi tin nhắn.</li><li>Kiểm tra luồng xử lý: Tool không được phép kích hoạt khi validate schema thất bại.</li><li>Xác nhận AI phản hồi yêu cầu bổ sung thông tin.</li></ol> |
+| Actual Output   |                                                        |
+| Result          |                                                        |
