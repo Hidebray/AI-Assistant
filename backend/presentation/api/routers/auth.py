@@ -78,8 +78,26 @@ async def get_me(current_user: User = Depends(get_current_user)):
 
 @router.delete("/reset")
 async def factory_reset(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db_session)):
-    # Deleting the user will cascade and delete everything else
-    await db.delete(current_user)
+    from backend.infrastructure.database.models import (
+        Session, Conversation, Message, CalendarEvent, MemoryNode, UserSetting, Task, Notification
+    )
+    from sqlalchemy import delete
+    
+    # Delete child messages first (via subquery)
+    await db.execute(delete(Message).where(Message.conversation_id.in_(
+        select(Conversation.id).where(Conversation.user_id == current_user.id)
+    )))
+    # Delete everything else
+    await db.execute(delete(Conversation).where(Conversation.user_id == current_user.id))
+    await db.execute(delete(Session).where(Session.user_id == current_user.id))
+    await db.execute(delete(CalendarEvent).where(CalendarEvent.user_id == current_user.id))
+    await db.execute(delete(MemoryNode).where(MemoryNode.user_id == current_user.id))
+    await db.execute(delete(UserSetting).where(UserSetting.user_id == current_user.id))
+    await db.execute(delete(Task).where(Task.user_id == current_user.id))
+    await db.execute(delete(Notification).where(Notification.user_id == current_user.id))
+    
+    # Finally delete the user
+    await db.execute(delete(User).where(User.id == current_user.id))
     await db.commit()
     return {"status": "success", "message": "Factory reset complete"}
 

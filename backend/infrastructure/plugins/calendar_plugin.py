@@ -113,8 +113,8 @@ class CalendarPlugin(BasePlugin):
                     start_time_str = payload.get("start_time")
                     end_time_str = payload.get("end_time")
 
-                    start_dt = dateutil.parser.parse(start_time_str)
-                    end_dt = dateutil.parser.parse(end_time_str)
+                    start_dt = dateutil.parser.parse(start_time_str, fuzzy=True)
+                    end_dt = dateutil.parser.parse(end_time_str, fuzzy=True)
 
                     # LLM often hallucinate 'Z' or +00:00 while outputting local time digits.
                     # We strip any tzinfo to force it to be evaluated as Local Time
@@ -136,6 +136,7 @@ class CalendarPlugin(BasePlugin):
                     )
                     db.add(new_event)
                     await db.commit()
+                    await db.refresh(new_event)
                     
                     if self.bus:
                         await self.bus.publish({
@@ -165,8 +166,8 @@ class CalendarPlugin(BasePlugin):
                     start_time_str = payload.get("start_time")
                     end_time_str = payload.get("end_time")
                     
-                    start_dt = dateutil.parser.parse(start_time_str)
-                    end_dt = dateutil.parser.parse(end_time_str)
+                    start_dt = dateutil.parser.parse(start_time_str, fuzzy=True)
+                    end_dt = dateutil.parser.parse(end_time_str, fuzzy=True)
                     
                     local_tz = datetime.now().astimezone().tzinfo
                     if start_dt.tzinfo is None:
@@ -244,7 +245,7 @@ class CalendarPlugin(BasePlugin):
                     title_kw = payload.get("title_keyword", "").lower()
                     new_start_str = payload.get("new_start_time")
                     
-                    new_dt = dateutil.parser.parse(new_start_str)
+                    new_dt = dateutil.parser.parse(new_start_str, fuzzy=True)
                     local_tz = datetime.now().astimezone().tzinfo
                     if new_dt.tzinfo is None:
                         new_dt = new_dt.replace(tzinfo=local_tz)
@@ -263,11 +264,12 @@ class CalendarPlugin(BasePlugin):
                         return {"status": "Error", "message": f"No event found matching keyword: {title_kw}"}
                         
                     from datetime import timedelta
+                    event_title = event.title
                     event.start_time = new_dt
                     event.end_time = new_dt + timedelta(hours=1)
                     await db.commit()
                     
-                    return {"status": "Success", "message": f"Successfully rescheduled event '{event.title}'."}
+                    return {"status": "Success", "message": f"Successfully rescheduled event '{event_title}'."}
             except Exception as e:
                 logger.error(f"Error updating event: {e}")
                 return {"status": "Error", "message": f"{str(e)}"}

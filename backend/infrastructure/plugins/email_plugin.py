@@ -11,8 +11,18 @@ logger = logging.getLogger(__name__)
 import base64
 from email.message import EmailMessage
 
-SCOPES = ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/gmail.send']
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+SCOPES = ['https://www.googleapis.com/auth/gmail.modify', 'https://www.googleapis.com/auth/gmail.send']
+import sys
+
+if getattr(sys, 'frozen', False):
+    appdata_dir = os.getenv('APPDATA', os.path.expanduser("~"))
+    BASE_DIR = os.path.join(appdata_dir, "com.aaa.app")
+    os.makedirs(BASE_DIR, exist_ok=True)
+    CREDENTIALS_FILE = os.path.join(sys._MEIPASS, 'credentials.json')
+else:
+    BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+    CREDENTIALS_FILE = os.path.join(BASE_DIR, 'credentials.json')
+
 TOKEN_FILE = os.path.join(BASE_DIR, 'token.json')
 
 class EmailPlugin(BasePlugin):
@@ -103,7 +113,7 @@ class EmailPlugin(BasePlugin):
                 # Chạy build và execute trong executor để tránh block event loop
                 loop = asyncio.get_running_loop()
                 def fetch_emails():
-                    service = build('gmail', 'v1', credentials=creds)
+                    service = build('gmail', 'v1', credentials=creds, cache_discovery=False)
                     results = service.users().messages().list(userId='me', maxResults=limit, q=query).execute()
                     messages = results.get('messages', [])
                     
@@ -147,7 +157,7 @@ class EmailPlugin(BasePlugin):
             try:
                 loop = asyncio.get_running_loop()
                 def do_send_email():
-                    service = build('gmail', 'v1', credentials=creds)
+                    service = build('gmail', 'v1', credentials=creds, cache_discovery=False)
                     message = EmailMessage()
                     message.set_content(body)
                     message['To'] = to_email

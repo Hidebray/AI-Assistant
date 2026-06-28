@@ -131,6 +131,22 @@ async def websocket_endpoint(
                 "message": getattr(event, "alert_message", "")
             })
 
+        async def on_system_notification(event):
+            message = getattr(event, "message", getattr(event, "subject", "Thông báo mới"))
+            if hasattr(event, "event_title"):
+                title = "Đồng bộ tự động"
+            elif hasattr(event, "subject"):
+                title = getattr(event, "sender", "Email mới")
+            else:
+                title = getattr(event, "title", "Sự kiện")
+                
+            await out_queue.put({
+                "type": "notification",
+                "title": title,
+                "message": message,
+                "is_important": False
+            })
+
         async def on_network_changed(event):
             await out_queue.put({
                 "type": "network_state",
@@ -142,6 +158,9 @@ async def websocket_endpoint(
         event_bus.subscribe("Chat.Plan", on_plan)
         event_bus.subscribe("Chat.Done", on_done)
         event_bus.subscribe("Agent.AlertTriggered", on_alert_triggered)
+        event_bus.subscribe("System.NewEmail", on_system_notification)
+        event_bus.subscribe("System.NewCalendarEvent", on_system_notification)
+        event_bus.subscribe("System.AutonomousSync", on_system_notification)
         event_bus.subscribe("NetworkMonitor", on_network_changed)
 
         async def ws_receiver():
@@ -246,5 +265,8 @@ async def websocket_endpoint(
             event_bus.unsubscribe("Chat.Plan", on_plan)
             event_bus.unsubscribe("Chat.Done", on_done)
             event_bus.unsubscribe("Agent.AlertTriggered", on_alert_triggered)
+            event_bus.unsubscribe("System.NewEmail", on_system_notification)
+            event_bus.unsubscribe("System.NewCalendarEvent", on_system_notification)
+            event_bus.unsubscribe("System.AutonomousSync", on_system_notification)
             event_bus.unsubscribe("NetworkMonitor", on_network_changed)
         manager.disconnect(client_id)

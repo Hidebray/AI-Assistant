@@ -16,14 +16,15 @@ class CalendarNotifierWorker:
         """Cronjob: Kiểm tra sự kiện sắp diễn ra trong 5 phút tới và đẩy notification."""
         try:
             now = datetime.now(timezone.utc)
-            # Find events that start between NOW and 5 minutes from now, and haven't been notified yet.
+            # Find events that start between 15 mins ago and 5 minutes from now, and haven't been notified yet.
+            lower_bound = now - timedelta(minutes=15)
             upper_bound = now + timedelta(minutes=5)
 
             async with db_manager.session() as db:
                 stmt = select(CalendarEvent).where(
                     CalendarEvent.is_deleted == False,
                     CalendarEvent.is_notified == False,
-                    CalendarEvent.start_time >= now.replace(tzinfo=None),
+                    CalendarEvent.start_time >= lower_bound.replace(tzinfo=None),
                     CalendarEvent.start_time <= upper_bound.replace(tzinfo=None)
                 )
                 
