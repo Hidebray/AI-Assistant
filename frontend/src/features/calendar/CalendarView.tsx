@@ -1,11 +1,17 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useCalendarStore } from '../../core/store/useCalendarStore';
 import { useTranslation } from 'react-i18next';
+import { CreateEventModal } from './CreateEventModal';
 import { Calendar as CalendarIcon, Clock, MapPin, Plus, Trash2 } from 'lucide-react';
 
 export const CalendarView: React.FC = () => {
   const { t } = useTranslation();
   const { events, isLoading, fetchEvents, deleteEvent } = useCalendarStore();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleCreateNew = () => {
+    setIsModalOpen(true);
+  };
 
   useEffect(() => {
     fetchEvents();
@@ -17,7 +23,7 @@ export const CalendarView: React.FC = () => {
         <h1 className="text-lg font-semibold text-slate-800 dark:text-white">
           {t('sidebar.calendar') || 'Lịch trình'}
         </h1>
-        <button className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors">
+        <button onClick={handleCreateNew} className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors">
           <Plus size={16} />
           <span>Tạo sự kiện</span>
         </button>
@@ -53,7 +59,7 @@ export const CalendarView: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <Clock size={16} className="shrink-0" />
                     <span className="truncate">
-                      {new Date(event.start_time).toLocaleString()}
+                      {new Date(event.start_time.endsWith('Z') ? event.start_time : event.start_time + 'Z').toLocaleString()}
                     </span>
                   </div>
                   {event.location && (
@@ -68,6 +74,8 @@ export const CalendarView: React.FC = () => {
           </div>
         )}
       </div>
+      
+      <CreateEventModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   );
 };

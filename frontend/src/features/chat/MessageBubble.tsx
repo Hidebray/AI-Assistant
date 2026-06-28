@@ -6,7 +6,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Copy, Check } from 'lucide-react';
 
-const CodeBlock = ({ match, children, rest }: any) => {
+const CodeBlock = ({ match, children }: any) => {
   const [copied, setCopied] = React.useState(false);
 
   const handleCopy = () => {
@@ -86,7 +86,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({ role, c
                 const { inline, className, children, ...rest } = props;
                 const match = /language-(\w+)/.exec(className || '');
                 return !inline && match ? (
-                  <CodeBlock match={match} children={children} rest={rest} />
+                  <CodeBlock match={match} children={children} />
                 ) : (
                   <code className="bg-slate-100 dark:bg-black/30 text-primary-600 dark:text-primary-300 rounded px-1.5 py-0.5 font-mono text-sm" {...rest}>
                     {children}

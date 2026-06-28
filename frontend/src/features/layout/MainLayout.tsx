@@ -11,9 +11,15 @@ import { useSettingsStore } from '../../core/store/useSettingsStore';
 import { useNotificationStore } from '../../core/store/useNotificationStore';
 import { useAuthStore } from '../../core/store/useAuthStore';
 import { useChatStore } from '../../core/store/useChatStore';
+import { useChatWebSocket } from '../chat/useChatWebSocket';
 
 export const MainLayout: React.FC = () => {
   const { activeView } = useSettingsStore();
+  const { sendMessage, stopGenerating } = useChatWebSocket();
+
+  useEffect(() => {
+    useChatStore.setState({ sendMessage, stopGenerating });
+  }, [sendMessage, stopGenerating]);
 
   useEffect(() => {
     // Listen for spotlight commands
@@ -26,6 +32,14 @@ export const MainLayout: React.FC = () => {
           useSettingsStore.getState().setActiveView('chat');
         }).then(unlistenFn => {
           unlisten = unlistenFn;
+        });
+
+        // Listen for open settings from system tray
+        listen('open-settings', () => {
+          useSettingsStore.getState().setSettingsOpen(true);
+        }).then(fn => {
+          const oldUnlisten = unlisten;
+          unlisten = () => { if (oldUnlisten) oldUnlisten(); fn(); };
         });
       }).catch(() => {});
     } catch {

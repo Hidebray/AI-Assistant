@@ -109,7 +109,7 @@ export const HistoryView: React.FC = () => {
                   </div>
                   
                   <p className="text-sm text-slate-500 dark:text-slate-400 mb-3 line-clamp-1">
-                    {conv.summary_content || "Bắt đầu cuộc trò chuyện mới..."}
+                    {(conv as any).summary_content || "Bắt đầu cuộc trò chuyện mới..."}
                   </p>
                   
                   <div className="flex items-center gap-5 text-xs font-medium text-slate-500 dark:text-slate-400">

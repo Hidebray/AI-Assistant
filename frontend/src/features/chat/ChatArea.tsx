@@ -7,8 +7,6 @@ import { AgentStatusIndicator } from './AgentStatusIndicator';
 import { ChatInput } from './ChatInput';
 import { useTranslation } from 'react-i18next';
 
-import { useChatWebSocket } from './useChatWebSocket';
-
 import { ActivityDrawer } from './ActivityDrawer';
 import { useSettingsStore } from '../../core/store/useSettingsStore';
 import { Activity, Sparkles, SquarePen } from 'lucide-react';
@@ -22,13 +20,12 @@ interface BackendMessage {
 
 export const ChatArea: React.FC = () => {
   const { t } = useTranslation();
-  const { messages, setMessages, activeConversationId, setActiveConversation, streamingContent, isStreaming, pendingSpotlightMessage, setPendingSpotlightMessage } = useChatStore();
+  const { messages, setMessages, activeConversationId, setActiveConversation, streamingContent, isStreaming, pendingSpotlightMessage, setPendingSpotlightMessage, sendMessage, stopGenerating } = useChatStore();
   const token = useAuthStore(state => state.token);
   const { isActivityDrawerOpen, setActivityDrawerOpen } = useSettingsStore();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { sendMessage, stopGenerating } = useChatWebSocket();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
@@ -111,7 +108,7 @@ export const ChatArea: React.FC = () => {
   const isNewChat = messages.length === 0 && !isStreaming && !isLoading;
 
   const handleNewChat = () => {
-    setActiveConversation(null);
+    setActiveConversation(null as unknown as string);
     setMessages([]);
   };
 
