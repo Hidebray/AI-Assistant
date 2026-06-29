@@ -1,11 +1,17 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTaskStore } from '../../core/store/useTaskStore';
 import { useTranslation } from 'react-i18next';
+import { CreateTaskModal } from './CreateTaskModal';
 import { CheckCircle2, Circle, Clock, Plus, Trash2 } from 'lucide-react';
 
 export const TasksView: React.FC = () => {
   const { t } = useTranslation();
   const { tasks, isLoading, fetchTasks, updateTaskStatus, deleteTask } = useTaskStore();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleCreateNew = () => {
+    setIsModalOpen(true);
+  };
 
   useEffect(() => {
     fetchTasks();
@@ -17,7 +23,7 @@ export const TasksView: React.FC = () => {
         <h1 className="text-lg font-semibold text-slate-800 dark:text-white">
           {t('sidebar.tasks') || 'Công việc'}
         </h1>
-        <button className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors">
+        <button onClick={handleCreateNew} className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors">
           <Plus size={16} />
           <span>Tạo mới</span>
         </button>
@@ -33,8 +39,12 @@ export const TasksView: React.FC = () => {
           </div>
         ) : (
           <div className="max-w-3xl mx-auto space-y-4">
-            {tasks.map(task => (
-              <div key={task.id} className={`flex items-start gap-4 p-4 rounded-xl border transition-all ${task.status === 'completed' ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-white/5 opacity-70' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 shadow-sm hover:shadow-md'}`}>
+            {[...tasks].sort((a, b) => {
+              if (a.status === 'completed' && b.status !== 'completed') return 1;
+              if (a.status !== 'completed' && b.status === 'completed') return -1;
+              return 0;
+            }).map(task => (
+              <div key={task.id} className={`group flex items-start gap-4 p-4 rounded-xl border transition-all ${task.status === 'completed' ? 'bg-emerald-50/50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20 shadow-sm' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 shadow-sm hover:shadow-md'}`}>
                 <button 
                   onClick={() => updateTaskStatus(task.id, task.status === 'completed' ? 'pending' : 'completed')}
                   className="mt-1 shrink-0 text-slate-400 hover:text-primary-500 transition-colors"
@@ -46,7 +56,7 @@ export const TasksView: React.FC = () => {
                   )}
                 </button>
                 <div className="flex-1 min-w-0">
-                  <h3 className={`text-base font-medium ${task.status === 'completed' ? 'text-slate-500 line-through' : 'text-slate-800 dark:text-white'}`}>
+                  <h3 className={`text-base font-medium ${task.status === 'completed' ? 'text-slate-500' : 'text-slate-800 dark:text-white'}`}>
                     {task.title}
                   </h3>
                   {task.description && (
@@ -77,6 +87,8 @@ export const TasksView: React.FC = () => {
           </div>
         )}
       </div>
+      
+      <CreateTaskModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   );
 };

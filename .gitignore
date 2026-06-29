@@ -15,7 +15,6 @@ __pycache__/
 *$py.class
 *.so
 *.egg-info/
-dist/
 build/
 *.egg
 venv/
@@ -23,11 +22,17 @@ venv/
 .Python
 
 # ====================
+# Build Artifacts / Binaries
+# ====================
+dist/
+backend/dist/
+frontend/dist/
+
+# ====================
 # Node.js / Frontend
 # ====================
 node_modules/
 frontend/node_modules/
-frontend/dist/
 frontend/.vite/
 *.tsbuildinfo
 

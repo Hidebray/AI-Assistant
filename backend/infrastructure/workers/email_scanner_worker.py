@@ -19,8 +19,15 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
+import sys
+if getattr(sys, 'frozen', False):
+    appdata_dir = os.getenv('APPDATA', os.path.expanduser("~"))
+    BASE_DIR = os.path.join(appdata_dir, "com.aaa.app")
+    os.makedirs(BASE_DIR, exist_ok=True)
+else:
+    BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+
 TOKEN_FILE = os.path.join(BASE_DIR, 'token.json')
 
 class EmailScannerWorker:
@@ -52,7 +59,7 @@ class EmailScannerWorker:
     )
     def _fetch_emails_from_api_sync(self, creds, limit=5):
         logger.debug("Fetching unread emails from Gmail API (with retry policy)...")
-        service = build('gmail', 'v1', credentials=creds)
+        service = build('gmail', 'v1', credentials=creds, cache_discovery=False)
         results = service.users().messages().list(userId='me', maxResults=limit, q="is:unread").execute()
         messages = results.get('messages', [])
         
@@ -64,6 +71,18 @@ class EmailScannerWorker:
             ).execute()
             fetched_messages.append(msg_data)
         return fetched_messages
+
+    def _mark_email_as_read(self, creds, msg_id: str):
+        try:
+            service = build('gmail', 'v1', credentials=creds, cache_discovery=False)
+            service.users().messages().modify(
+                userId='me', 
+                id=msg_id, 
+                body={'removeLabelIds': ['UNREAD']}
+            ).execute()
+            logger.info(f"Marked email {msg_id} as read to prevent spam.")
+        except Exception as e:
+            logger.error(f"Failed to mark email {msg_id} as read: {e}")
 
     async def scan_unread_emails(self):
         """Cronjob: Quét email mới định kỳ và gửi cho AlertEngine đánh giá."""
@@ -81,13 +100,13 @@ class EmailScannerWorker:
 
             async with db_manager.session() as db:
                 # Tìm user đầu tiên (mặc định cho desktop app 1 user)
-                result = await db.execute(select(User).limit(1))
-                user = result.scalars().first()
-                if not user:
+                result = await db.execute(select(User.id).limit(1))
+                user_id = result.scalar()
+                if not user_id:
                     return
 
                 # Khởi tạo LLM Adapter
-                llm = await LLMFactory.get_adapter(db, user_id=user.id)
+                llm = await LLMFactory.get_adapter(db, user_id=user_id)
                 prompt_raw = await self._load_prompt("email_analysis.prompt.j2")
                 template = Template(prompt_raw)
                 current_time = datetime.now().astimezone().isoformat()
@@ -117,40 +136,53 @@ class EmailScannerWorker:
 
                     # 2. Xử lý logic Autonomous Sync
                     if analysis.has_event and analysis.event_title and analysis.start_time:
-                        # Thêm sự kiện vào Calendar
-                        end_time_val = analysis.end_time
-                        if not end_time_val:
-                            # Default 1 hour later
-                            from dateutil import parser
-                            from datetime import timedelta
+                        from dateutil import parser
+                        from datetime import timedelta
+                        
+                        try:
+                            start_dt = parser.parse(analysis.start_time)
+                            if start_dt.tzinfo is not None:
+                                start_dt = start_dt.astimezone(timezone.utc).replace(tzinfo=None)
+                        except Exception:
+                            logger.error(f"Failed to parse start_time: {analysis.start_time}")
+                            continue
+
+                        if analysis.end_time:
                             try:
-                                dt = parser.parse(analysis.start_time)
-                                end_time_val = (dt + timedelta(hours=1)).isoformat()
-                            except:
-                                end_time_val = analysis.start_time
+                                end_dt = parser.parse(analysis.end_time)
+                                if end_dt.tzinfo is not None:
+                                    end_dt = end_dt.astimezone(timezone.utc).replace(tzinfo=None)
+                            except Exception:
+                                end_dt = start_dt + timedelta(hours=1)
+                        else:
+                            end_dt = start_dt + timedelta(hours=1)
 
-                        new_event = CalendarEvent(
-                            user_id=user.id,
-                            title=analysis.event_title,
-                            description=f"Auto-synced from email: {subject}\n{analysis.summary}",
-                            start_time=analysis.start_time,
-                            end_time=end_time_val,
-                            location=None,
-                            source="auto_email",
-                            source_id=msg_data.get("id")
-                        )
-                        db.add(new_event)
-                        await db.commit()
+                        # Check if already exists
+                        stmt_check = select(CalendarEvent).where(CalendarEvent.source_id == msg_data.get("id"))
+                        existing = (await db.execute(stmt_check)).scalar_one_or_none()
+                        
+                        if not existing:
+                            new_event = CalendarEvent(
+                                user_id=user_id,
+                                title=analysis.event_title,
+                                start_time=start_dt,
+                                end_time=end_dt,
+                                location=None,
+                                source_origin="auto_email",
+                                source_id=msg_data.get("id")
+                            )
+                            db.add(new_event)
+                            await db.commit()
 
-                        # Publish AutonomousSyncEvent
-                        sync_event = AutonomousSyncEvent(
-                            source_origin="email_scanner_worker",
-                            status="success",
-                            message=f"Đã tự động thêm sự kiện '{analysis.event_title}' vào lịch.",
-                            event_title=analysis.event_title,
-                            start_time=analysis.start_time
-                        )
-                        await self.event_bus.publish(sync_event)
+                            # Publish AutonomousSyncEvent
+                            sync_event = AutonomousSyncEvent(
+                                source_origin="email_scanner_worker",
+                                status="success",
+                                message=f"Đã tự động thêm sự kiện '{analysis.event_title}' vào lịch.",
+                                event_title=analysis.event_title,
+                                start_time=analysis.start_time
+                            )
+                            await self.event_bus.publish(sync_event)
 
                     # 3. Alert nếu URGENT
                     if analysis.is_urgent:
@@ -164,8 +196,9 @@ class EmailScannerWorker:
                         )
                         await self.event_bus.publish(event_data)
                     
-                    # Mark email as read via Gmail API in the background (mocked here, should use modify API)
-                    # logger.info(f"Marking email {msg_data.get('id')} as read...")
+                    # Mark email as read via Gmail API to prevent duplicate alerts
+                    if msg_data.get('id'):
+                        await loop.run_in_executor(None, self._mark_email_as_read, creds, msg_data.get('id'))
                 
         except Exception as e:
             logger.error(f"EmailScannerWorker Error: {e}")

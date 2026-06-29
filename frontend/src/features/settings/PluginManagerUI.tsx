@@ -54,11 +54,12 @@ export const PluginManagerUI: React.FC = () => {
       });
       
       if (res.ok) {
-        addToast(newState ? t('settings.plugins.enabled', { id }) : t('settings.plugins.disabled', { id }));
+        const pluginName = t(`settings.plugins.items.${id}.name`, { defaultValue: plugins.find(p => p.id === id)?.name || id });
+        addToast(newState ? t('settings.plugins.enabled', { name: pluginName }) : t('settings.plugins.disabled', { name: pluginName }));
       } else {
         // Revert on failure
         setPlugins(prev => prev.map(p => p.id === id ? { ...p, isActive: !newState } : p));
-        addToast("Lỗi khi lưu cài đặt");
+        addToast(t('settings.plugins.saveError'));
       }
     } catch (e) {
       console.error(e);
@@ -73,7 +74,7 @@ export const PluginManagerUI: React.FC = () => {
         const headers: Record<string, string> = {};
         if (token) headers.Authorization = `Bearer ${token}`;
         
-        addToast("Đang khởi tạo luồng kết nối Google...");
+        addToast(t('settings.plugins.googleInit'));
         const res = await fetch('http://localhost:8000/api/google/auth', {
           method: 'POST',
           headers
@@ -81,15 +82,16 @@ export const PluginManagerUI: React.FC = () => {
         
         if (res.ok) {
           const data = await res.json();
-          addToast(data.message || "Hãy kiểm tra trình duyệt (nếu nó tự mở).");
+          addToast(data.message || t('settings.plugins.googleCheckBrowser'));
         } else {
-          addToast("Lỗi khi kết nối Google. Đảm bảo credentials.json có trên server.");
+          addToast(t('settings.plugins.googleMissingCreds'));
         }
       } catch (e) {
-        addToast("Lỗi kết nối đến server.");
+        addToast(t('settings.plugins.serverError'));
       }
     } else {
-      addToast(`Cấu hình cho ${id} đang được phát triển`);
+      const pluginName = t(`settings.plugins.items.${id}.name`, { defaultValue: plugins.find(p => p.id === id)?.name || id });
+      addToast(t('settings.plugins.configUnderDev', { name: pluginName }));
     }
   };
 

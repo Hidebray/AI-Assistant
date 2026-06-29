@@ -69,8 +69,14 @@
       "title": "Plugins",
       "description": "Enhance capabilities by enabling plugins.",
       "noPlugins": "No plugins found on the server.",
-      "enabled": "Enabled plugin {id}",
-      "disabled": "Disabled plugin {id}",
+      "enabled": "Enabled plugin {{name}}",
+      "disabled": "Disabled plugin {{name}}",
+      "saveError": "Error saving settings",
+      "googleInit": "Initializing Google connection...",
+      "googleCheckBrowser": "Please check your browser (if it opens automatically).",
+      "googleMissingCreds": "Google connection error: Missing credentials.json on server.",
+      "serverError": "Server connection error.",
+      "configUnderDev": "Config for plugin {{name}} is under development",
       "config": "Config",
       "items": {
         "task_plugin": {

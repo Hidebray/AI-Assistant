@@ -19,8 +19,8 @@ class UpcomingMeetingRule(IAlertRule):
             current_utc = datetime.now(timezone.utc)
             time_diff = start_time - current_utc
             
-            # Khớp nếu diễn ra trong vòng 5 phút tới (theo specs)
-            if 0 < time_diff.total_seconds() <= 5 * 60:
+            # Khớp nếu diễn ra trong vòng 5 phút tới hoặc đã bắt đầu không quá 15 phút
+            if -15 * 60 <= time_diff.total_seconds() <= 5 * 60:
                 title = event_data.title
                 return RuleResult(
                     is_matched=True, 

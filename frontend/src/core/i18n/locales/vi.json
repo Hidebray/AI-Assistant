@@ -69,8 +69,14 @@
       "title": "Tiện ích mở rộng",
       "description": "Mở rộng khả năng bằng cách bật các tiện ích.",
       "noPlugins": "Không tìm thấy tiện ích nào.",
-      "enabled": "Đã bật plugin {id}",
-      "disabled": "Đã tắt plugin {id}",
+      "enabled": "Đã bật tiện ích {{name}}",
+      "disabled": "Đã tắt tiện ích {{name}}",
+      "saveError": "Lỗi khi lưu cài đặt",
+      "googleInit": "Đang khởi tạo luồng kết nối Google...",
+      "googleCheckBrowser": "Hãy kiểm tra trình duyệt (nếu nó tự mở).",
+      "googleMissingCreds": "Lỗi kết nối Google: Thiếu file credentials.json trên server.",
+      "serverError": "Lỗi kết nối đến server.",
+      "configUnderDev": "Cấu hình cho tiện ích {{name}} đang được phát triển",
       "config": "Cấu hình",
       "items": {
         "task_plugin": {

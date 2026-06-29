@@ -23,9 +23,8 @@ class NotificationService:
         self.event_bus.subscribe("System.AutonomousSync", self._handle_auto_sync)
 
     async def _get_admin_user_id(self):
-        # We assume there's one main user or we get the first admin for now.
         async with db_manager.session() as db:
-            stmt = select(User).where(User.username == "master_admin")
+            stmt = select(User).order_by(User.created_at.asc())
             result = await db.execute(stmt)
             user = result.scalars().first()
             return user.id if user else None

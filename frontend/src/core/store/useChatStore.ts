@@ -29,6 +29,10 @@ interface ChatState {
   clearContext: () => void;
   pendingSpotlightMessage: string | null;
   setPendingSpotlightMessage: (msg: string | null) => void;
+  pendingDraftMessage: string | null;
+  setPendingDraftMessage: (msg: string | null) => void;
+  sendMessage: (msg: string) => void;
+  stopGenerating: () => void;
 }
 
 export const useChatStore = create<ChatState>((set) => ({
@@ -63,5 +67,9 @@ export const useChatStore = create<ChatState>((set) => ({
   }),
   clearContext: () => set({ messages: [], streamingContent: '', isStreaming: false, activeConversationId: null }),
   pendingSpotlightMessage: null,
-  setPendingSpotlightMessage: (msg) => set({ pendingSpotlightMessage: msg })
+  setPendingSpotlightMessage: (msg) => set({ pendingSpotlightMessage: msg }),
+  pendingDraftMessage: null,
+  setPendingDraftMessage: (msg) => set({ pendingDraftMessage: msg }),
+  sendMessage: () => {},
+  stopGenerating: () => {}
 }));

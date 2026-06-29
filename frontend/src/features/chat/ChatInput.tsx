@@ -23,6 +23,19 @@ export const ChatInput: React.FC<ChatInputProps> = ({ sendMessage, stopGeneratin
     setInput(baseInput + (baseInput && transcript ? ' ' : '') + transcript);
   });
 
+  const pendingDraftMessage = useChatStore(state => state.pendingDraftMessage);
+  const setPendingDraftMessage = useChatStore(state => state.setPendingDraftMessage);
+
+  useEffect(() => {
+    if (pendingDraftMessage) {
+      setInput(pendingDraftMessage);
+      setPendingDraftMessage(null);
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    }
+  }, [pendingDraftMessage, setPendingDraftMessage]);
+
   const handleToggleMic = () => {
     if (!isListening) {
       setBaseInput(input);

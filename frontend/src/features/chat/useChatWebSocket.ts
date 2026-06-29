@@ -87,6 +87,50 @@ export const useChatWebSocket = () => {
           } catch {
             // Ignore if not in Tauri
           }
+        } else if (data.type === "notification") {
+          console.log("System Notification:", data.message);
+          
+          useAlertStore.getState().triggerAlert({
+            urgency: 'low',
+            title: data.title,
+            message: data.message
+          });
+
+          // Add to NotificationStore for persistent UI
+          const { useNotificationStore } = await import('../../core/store/useNotificationStore');
+          useNotificationStore.getState().addNotification({
+            id: crypto.randomUUID(),
+            title: data.title,
+            message: data.message,
+            type: 'info',
+            isRead: false,
+            isImportant: false,
+            createdAt: new Date().toISOString()
+          });
+
+          // AUTO REFRESH CALENDAR IF RELATED TO CALENDAR
+          if (data.title && (data.title.toLowerCase().includes('lịch') || data.title.toLowerCase().includes('sự kiện') || data.title.toLowerCase().includes('đồng bộ'))) {
+              try {
+                  const { useCalendarStore } = await import('../../core/store/useCalendarStore');
+                  useCalendarStore.getState().fetchEvents();
+              } catch (e) {
+                  console.error("Failed to auto-refresh calendar", e);
+              }
+          }
+
+          // Try to use Tauri notification if available
+          try {
+            import('@tauri-apps/plugin-notification').then(async ({ sendNotification, isPermissionGranted, requestPermission }) => {
+              let permissionGranted = await isPermissionGranted();
+              if (!permissionGranted) {
+                const permission = await requestPermission();
+                permissionGranted = permission === 'granted';
+              }
+              if (permissionGranted) {
+                sendNotification({ title: data.title, body: data.message });
+              }
+            }).catch(() => {});
+          } catch {}
         } else if (data.type === "error") {
           console.error("Chat Error:", data.content);
           appendStreamChunk(`\n\n**Error:** ${data.content}`);

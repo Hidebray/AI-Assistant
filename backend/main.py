@@ -36,6 +36,38 @@ class MockRepository:
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+async def _run_schema_migrations():
+    """
+    Safely run incremental column migrations for SQLite.
+    Uses ALTER TABLE ADD COLUMN (no-op if column already exists).
+    This handles cases where the production DB was created before new model columns were added.
+    """
+    from backend.infrastructure.database.session import db_manager
+    migrations = [
+        # (table_name, column_name, column_definition)
+        ("calendar_events", "is_notified", "BOOLEAN DEFAULT 0"),
+        ("tasks", "priority",    "VARCHAR(20) DEFAULT 'medium'"),
+        ("tasks", "is_deleted",  "BOOLEAN DEFAULT 0"),
+        ("tasks", "is_notified", "BOOLEAN DEFAULT 0"),
+        ("tasks", "deadline",    "DATETIME"),
+    ]
+    async with db_manager._engine.connect() as conn:
+        # Get existing columns for each table
+        from sqlalchemy import text
+        tables_checked: dict[str, set] = {}
+        for table, column, col_def in migrations:
+            if table not in tables_checked:
+                result = await conn.execute(text(f"PRAGMA table_info({table})"))
+                tables_checked[table] = {row[1] for row in result.fetchall()}
+            
+            if column not in tables_checked[table]:
+                try:
+                    await conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {col_def}"))
+                    await conn.commit()
+                    logger.info(f"Schema migration: added column '{column}' to table '{table}'")
+                except Exception as e:
+                    logger.warning(f"Schema migration failed for {table}.{column}: {e}")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
@@ -46,6 +78,11 @@ async def lifespan(app: FastAPI):
     from backend.infrastructure.database.session import db_manager
     async with db_manager._engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    
+    # Run incremental schema migrations for columns added after initial deployment.
+    # SQLite's CREATE TABLE IF NOT EXISTS won't add new columns to existing tables,
+    # so we do safe ALTER TABLE ADD COLUMN calls for each missing field.
+    await _run_schema_migrations()
     
     # Init Event Bus
     repo = MockRepository()
