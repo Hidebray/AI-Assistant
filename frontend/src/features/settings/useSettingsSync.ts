@@ -22,7 +22,7 @@ const buildPayload = (data: SettingsSyncData): Record<string, string> => {
   return payload;
 };
 
-export const useSettingsSync = (data: SettingsSyncData, endpoint: string = 'http://localhost:8000/api/settings') => {
+export const useSettingsSync = (data: SettingsSyncData| null, endpoint: string = 'http://localhost:8000/api/settings') => {
   const addToast = useSettingsStore(state => state.addToast);
   const token = useAuthStore(state => state.token);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -55,6 +55,9 @@ export const useSettingsSync = (data: SettingsSyncData, endpoint: string = 'http
   }, [token, endpoint, addToast]);
 
   useEffect(() => {
+
+    if (data === null) return; // chưa load xong, bỏ qua hoàn toàn
+
     if (isFirstRender.current) {
       isFirstRender.current = false;
       prevData.current = data;

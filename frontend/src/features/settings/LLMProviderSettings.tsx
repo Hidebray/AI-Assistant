@@ -74,7 +74,7 @@ export const LLMProviderSettings: React.FC = () => {
   const formData = watch();
   
   // Custom hook will automatically debounce and PUT changes
-  useSettingsSync(formData);
+  useSettingsSync(loading ? null : formData);
 
   if (loading) {
     return <div className="w-full flex justify-center py-20 text-slate-500 dark:text-slate-400"><Loader2 className="animate-spin" size={32} /></div>;
