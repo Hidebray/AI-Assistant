@@ -2,6 +2,15 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Bell, CheckCircle2, CalendarClock, AlertTriangle, Check, Trash2 } from 'lucide-react';
 
+/*interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  isRead: boolean;
+  createdAt: string;
+  isImportant?: boolean;
+}*/
 
 import { useNotificationStore } from '../../core/store/useNotificationStore';
 import { useAuthStore } from '../../core/store/useAuthStore';
