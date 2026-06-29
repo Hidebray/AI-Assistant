@@ -47,7 +47,10 @@ class UserSetting(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False)
     setting_key: Mapped[str] = mapped_column(String(100), nullable=False)
-    setting_value: Mapped[str] = mapped_column(EncryptedString, nullable=False)
+    # Stored as plaintext - AppData directory provides OS-level access control.
+    # EncryptedString was removed because the hardcoded fallback key provided no
+    # real security and caused persistent double-encryption bugs across the codebase.
+    setting_value: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, onupdate=utc_now)
 

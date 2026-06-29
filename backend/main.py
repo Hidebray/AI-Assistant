@@ -1,3 +1,12 @@
+import os
+import sys
+import certifi
+
+if getattr(sys, 'frozen', False):
+    # Fix SSL certificates issue for httpx/openai in PyInstaller
+    os.environ['SSL_CERT_FILE'] = certifi.where()
+    os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
+
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -67,6 +76,15 @@ async def _run_schema_migrations():
                     logger.info(f"Schema migration: added column '{column}' to table '{table}'")
                 except Exception as e:
                     logger.warning(f"Schema migration failed for {table}.{column}: {e}")
+
+        # Data migration: clear old double-encrypted keys (Fernet tokens start with gAAAAAB...)
+        try:
+            await conn.execute(text("UPDATE user_settings SET setting_value = '' WHERE setting_key IN ('llm.gemini_key', 'llm.openai_key') AND setting_value LIKE 'gAAAAA%'"))
+            await conn.execute(text("UPDATE user_settings SET setting_value = 'http://localhost:11434' WHERE setting_key = 'llm.ollama_url' AND setting_value LIKE 'gAAAAA%'"))
+            await conn.commit()
+            logger.info("Data migration: cleaned up old encrypted settings.")
+        except Exception as e:
+            logger.warning(f"Data migration failed: {e}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

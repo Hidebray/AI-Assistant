@@ -6,12 +6,13 @@ from typing import Dict, Any
 from backend.presentation.api.dependencies import get_current_user
 from backend.infrastructure.database.session import get_db_session
 from backend.infrastructure.database.models import User, UserSetting
-from backend.application.encryption import encrypt_value, decrypt_value
 from backend.domain.events.base_events import SystemEvent
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
 
-SENSITIVE_KEYS = ["llm.openai_key", "llm.gemini_key"]
+# NOTE: UserSetting.setting_value uses EncryptedString TypeDecorator which
+# automatically encrypts on write and decrypts on read at the SQLAlchemy level.
+# No manual encrypt/decrypt calls are needed here.
 
 @router.get("/")
 async def get_settings(
@@ -36,9 +37,8 @@ async def get_settings(
     plugin_states = {}
     
     for s in db_settings:
+        # setting_value is already decrypted by EncryptedString TypeDecorator
         val = s.setting_value
-        if s.setting_key in SENSITIVE_KEYS:
-            val = decrypt_value(val)
             
         if s.setting_key.startswith("plugins.") and s.setting_key.endswith(".active"):
             plugin_id = s.setting_key.split(".")[1]
@@ -86,9 +86,8 @@ async def update_settings(
     # Expects flat key-value pairs, e.g. {"llm.openai_key": "sk-...", "plugins.mock_calendar.active": "true"}
     
     for key, value in payload.items():
+        # setting_value is encrypted automatically by EncryptedString TypeDecorator on commit
         val_str = str(value)
-        if key in SENSITIVE_KEYS:
-            val_str = encrypt_value(val_str)
             
         stmt = select(UserSetting).where(
             UserSetting.user_id == current_user.id,

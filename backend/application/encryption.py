@@ -13,7 +13,8 @@ def get_fernet() -> Fernet:
     global _fernet_instance
     if _fernet_instance is None:
         from dotenv import load_dotenv
-        load_dotenv()
+        env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
+        load_dotenv(env_path)
         
         dev_mode = os.getenv("DEV_MODE", "false").lower() == "true"
         secret_key = os.getenv("SECRET_KEY")
@@ -22,7 +23,8 @@ def get_fernet() -> Fernet:
                 logger.warning("SECRET_KEY not found in environment, falling back to a default insecure key.")
                 secret_key = "default-insecure-key-for-development"
             else:
-                raise ValueError("SECRET_KEY is required in production.")
+                logger.warning("SECRET_KEY not found, using standalone desktop fallback.")
+                secret_key = "desktop_standalone_secure_fallback_key_for_local_use_only"
         
         salt_str = os.getenv("ENCRYPTION_SALT")
         if not salt_str:
@@ -30,7 +32,8 @@ def get_fernet() -> Fernet:
                 logger.warning("ENCRYPTION_SALT not found, using dev fallback.")
                 salt_str = "ai-assistant-dev-salt"
             else:
-                raise ValueError("ENCRYPTION_SALT is required in production.")
+                logger.warning("ENCRYPTION_SALT not found, using standalone desktop fallback.")
+                salt_str = "ai-assistant-standalone-salt"
                 
         # We need a 32 url-safe base64-encoded byte string for Fernet.
         # We use PBKDF2 to derive a 32-byte key from the SECRET_KEY string.

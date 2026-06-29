@@ -4,7 +4,8 @@ from passlib.context import CryptContext
 import jwt
 from dotenv import load_dotenv
 
-load_dotenv()
+env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
+load_dotenv(env_path)
 
 DEV_MODE = os.getenv("DEV_MODE", "false").lower() == "true"
 SECRET_KEY = os.environ.get("SECRET_KEY")

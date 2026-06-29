@@ -55,6 +55,7 @@ pyinstaller --name "backend" --onefile `
   --hidden-import passlib.handlers.bcrypt `
   --copy-metadata tiktoken `
   --collect-data tiktoken `
+  --collect-data certifi `
   --hidden-import tiktoken_ext.openai_public `
   --hidden-import tiktoken_ext.bpe `
   --add-data "backend/credentials.json;." `

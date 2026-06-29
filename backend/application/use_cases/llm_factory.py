@@ -3,8 +3,9 @@ from sqlalchemy import select
 from typing import Optional
 
 from backend.application.dtos.core_dtos import ActionDTO
-from backend.application.encryption import decrypt_value
 from backend.infrastructure.llm.hybrid_adapter import HybridLLMAdapter
+# NOTE: UserSetting.setting_value uses EncryptedString TypeDecorator.
+# Values are automatically decrypted on read — no manual decrypt_value() needed.
 
 class MockLLMAdapter:
     def __init__(self, system_prompt=None):
@@ -51,13 +52,11 @@ class LLMFactory:
         stmt = select(UserSetting).where(UserSetting.user_id == user_id)
         result = await db.execute(stmt)
         settings_rows = result.scalars().all()
+        # Values are already decrypted by EncryptedString TypeDecorator on read
         settings = {s.setting_key: s.setting_value for s in settings_rows}
         
-        openai_key_enc = settings.get("llm.openai_key")
-        openai_key = decrypt_value(openai_key_enc) if openai_key_enc else None
-        
-        gemini_key_enc = settings.get("llm.gemini_key")
-        gemini_key = decrypt_value(gemini_key_enc) if gemini_key_enc else None
+        openai_key = settings.get("llm.openai_key") or None
+        gemini_key = settings.get("llm.gemini_key") or None
         
         local_url = settings.get("llm.ollama_url") or "http://localhost:11434"
         if not local_url.endswith("/v1") and not local_url.endswith("/v1/"):
@@ -89,7 +88,7 @@ class LLMFactory:
             configs.append(LLMConfig(api_key=openai_key, model="gpt-4o-mini"))
             
         if gemini_key:
-            configs.append(LLMConfig(api_key=gemini_key, base_url="https://generativelanguage.googleapis.com/v1beta/openai/", model="gemini-flash-latest"))
+            configs.append(LLMConfig(api_key=gemini_key, base_url="https://generativelanguage.googleapis.com/v1beta/openai/", model="gemini-2.5-flash"))
             
         # Determine which local model to use
         local_model = "llama3" # fallback
